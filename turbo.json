@@ -1,0 +1,31 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {},
+    "lint:fix": {},
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^lint"],
+      "cache": false
+    },
+    "deploy:solo": {
+      "dependsOn": ["^build"]
+    },
+    "deploy:testnet": {
+      "dependsOn": ["^build"]
+    },
+    "compile": {
+      "dependsOn": ["^build"]
+    },
+    "contracts:test": {
+      "dependsOn": ["^build"]
+    }
+  }
+}
