@@ -2266,6 +2266,11 @@
     got "^11.8.5"
     os-filter-obj "^2.0.0"
 
+"@mongodb-js/saslprep@^1.1.5":
+  version "1.1.8"
+  dependencies:
+    sparse-bitfield "^3.0.3"
+
 "@motionone/animation@^10.15.1", "@motionone/animation@^10.17.0":
   version "10.17.0"
   resolved "https://registry.npmjs.org/@motionone/animation/-/animation-10.17.0.tgz"
@@ -3929,6 +3934,14 @@
   version "13.12.0"
   resolved "https://registry.npmjs.org/@types/validator/-/validator-13.12.0.tgz"
   integrity sha512-nH45Lk7oPIJ1RVOF6JgFI6Dy0QpHEzq4QecZhvguxYPDwT8c93prCMqAtiIttm39voZ+DDR+qkNnMpJmMBRqag==
+
+"@types/webidl-conversions@*":
+  version "7.0.3"
+
+"@types/whatwg-url@^11.0.2":
+  version "11.0.5"
+  dependencies:
+    "@types/webidl-conversions" "*"
 
 "@types/ws@^8.5.10":
   version "8.5.10"
@@ -5860,6 +5873,9 @@ bser@2.1.1:
   dependencies:
     node-int64 "^0.4.0"
 
+bson@^6.7.0:
+  version "6.8.0"
+
 buffer-equal-constant-time@1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz"
@@ -7027,7 +7043,7 @@ debug@^3.2.7:
   dependencies:
     ms "^2.1.1"
 
-debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.3, debug@^4.3.4, debug@~4.3.1, debug@4, debug@4.3.4:
+debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.3, debug@^4.3.4, debug@~4.3.1, debug@4, debug@4.3.4, debug@4.x:
   version "4.3.4"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
   integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
@@ -11001,6 +11017,9 @@ jws@^3.2.2:
     jwa "^1.4.1"
     safe-buffer "^5.0.1"
 
+kareem@2.6.3:
+  version "2.6.3"
+
 keccak@^3.0.0, keccak@^3.0.2, keccak@^3.0.3:
   version "3.0.4"
   resolved "https://registry.npmjs.org/keccak/-/keccak-3.0.4.tgz"
@@ -11561,6 +11580,9 @@ mem@^4.0.0:
     mimic-fn "^2.0.0"
     p-is-promise "^2.0.0"
 
+memory-pager@^1.0.2:
+  version "1.5.0"
+
 memorystream@^0.3.1:
   version "0.3.1"
   resolved "https://registry.npmjs.org/memorystream/-/memorystream-0.3.1.tgz"
@@ -11947,6 +11969,19 @@ moment@^2.29.1:
   resolved "https://registry.npmjs.org/moment/-/moment-2.30.1.tgz"
   integrity sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==
 
+mongodb-connection-string-url@^3.0.0:
+  version "3.0.1"
+  dependencies:
+    "@types/whatwg-url" "^11.0.2"
+    whatwg-url "^13.0.0"
+
+mongodb@6.8.0:
+  version "6.8.0"
+  dependencies:
+    "@mongodb-js/saslprep" "^1.1.5"
+    bson "^6.7.0"
+    mongodb-connection-string-url "^3.0.0"
+
 morgan@^1.10.0:
   version "1.10.0"
   resolved "https://registry.npmjs.org/morgan/-/morgan-1.10.0.tgz"
@@ -11976,6 +12011,14 @@ move-file@^2.1.0:
   integrity sha512-i9qLW6gqboJ5Ht8bauZi7KlTnQ3QFpBCvMvFfEcHADKgHGeJ9BZMO7SFCTwHPV9Qa0du9DYY1Yx3oqlGt30nXA==
   dependencies:
     path-exists "^4.0.0"
+
+mpath@0.9.0:
+  version "0.9.0"
+
+mquery@5.0.0:
+  version "5.0.0"
+  dependencies:
+    debug "4.x"
 
 mri@^1.2.0:
   version "1.2.0"
@@ -13309,7 +13352,7 @@ prettier@^2.3.1:
   resolved "https://registry.npmjs.org/prettier/-/prettier-2.8.8.tgz"
   integrity sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==
 
-prettier@^2.7.1:
+prettier@^2.8.8:
   version "2.8.8"
   resolved "https://registry.npmjs.org/prettier/-/prettier-2.8.8.tgz"
   integrity sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==
@@ -13502,6 +13545,9 @@ punycode@^2.1.1:
   version "2.3.1"
   resolved "https://registry.npmjs.org/punycode/-/punycode-2.3.1.tgz"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
+
+punycode@^2.3.0:
+  version "2.3.1"
 
 punycode@^2.3.1:
   version "2.3.1"
@@ -14556,6 +14602,9 @@ side-channel@^1.0.4, side-channel@^1.0.6:
     get-intrinsic "^1.2.4"
     object-inspect "^1.13.1"
 
+sift@17.1.3:
+  version "17.1.3"
+
 siginfo@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz"
@@ -14821,6 +14870,11 @@ sparse-array@^1.3.1:
   version "1.3.2"
   resolved "https://registry.npmjs.org/sparse-array/-/sparse-array-1.3.2.tgz"
   integrity sha512-ZT711fePGn3+kQyLuv1fpd3rNSkNF8vd5Kv2D+qnOANeyKs3fx6bUMGWRPvgTTcYV64QMqZKZwcuaQSP3AZ0tg==
+
+sparse-bitfield@^3.0.3:
+  version "3.0.3"
+  dependencies:
+    memory-pager "^1.0.2"
 
 spdx-correct@^3.0.0:
   version "3.2.0"
@@ -15616,6 +15670,11 @@ tough-cookie@~2.5.0:
   dependencies:
     psl "^1.1.28"
     punycode "^2.1.1"
+
+tr46@^4.1.1:
+  version "4.1.1"
+  dependencies:
+    punycode "^2.3.0"
 
 tr46@^5.0.0:
   version "5.0.0"
@@ -16934,6 +16993,12 @@ whatwg-mimetype@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/whatwg-mimetype/-/whatwg-mimetype-4.0.0.tgz"
   integrity sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==
+
+whatwg-url@^13.0.0:
+  version "13.0.0"
+  dependencies:
+    tr46 "^4.1.1"
+    webidl-conversions "^7.0.0"
 
 whatwg-url@^14.0.0:
   version "14.0.0"
