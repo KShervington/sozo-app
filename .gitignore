@@ -6,3 +6,6 @@
 
 # Files generated from building the app
 **/dist
+
+# Cookies from project build
+.turbo/cookies
