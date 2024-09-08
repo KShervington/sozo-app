@@ -7,10 +7,19 @@ import { resolve } from "path";
 
 export default defineConfig(() => {
   return {
-    plugins: [nodePolyfills(), react()],
+    plugins: [
+      nodePolyfills({
+        // Enable specific shims
+        protocolImports: true,
+      }),
+      react(),
+    ],
     build: {
       commonjsOptions: {
         transformMixedEsModules: true,
+      },
+      rollupOptions: {
+        external: ["vite-plugin-node-polyfills/shims/process"],
       },
     },
     preview: {
