@@ -14,7 +14,8 @@ export class UserRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get('/users', this.user.getUserList);
-    this.router.post('/users', ValidationMiddleware(UserDto), this.user.createUser);
     this.router.get('/users/:email', this.user.getUser);
+    this.router.post('/users', ValidationMiddleware(UserDto), this.user.createUser);
+    this.router.delete('/users/:id', this.user.deleteUser);
   }
 }

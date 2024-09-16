@@ -90,4 +90,16 @@ export class UserController {
       next(error);
     }
   };
+
+  public deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id = req.params.id;
+
+      await User.findByIdAndDelete(id);
+
+      res.status(200).json({ msg: 'User successfully removed' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
