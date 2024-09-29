@@ -5,3 +5,10 @@ export interface User {
   createdAt: Date;
   bio?: string;
 }
+
+export interface UserPatch {
+  username?: string;
+  email?: string;
+  password?: string;
+  bio?: string;
+}

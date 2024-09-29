@@ -3,6 +3,7 @@ import { User } from '@/models/User';
 import * as bcrypt from 'bcrypt';
 import url from 'url';
 import { ParsedUrlQuery } from 'querystring';
+import { UserPatch } from '@/interfaces/user.interface';
 
 export class UserController {
   public createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -98,6 +99,58 @@ export class UserController {
       await User.findByIdAndDelete(id);
 
       res.status(200).json({ msg: 'User successfully removed' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // @route   PATCH /users/:id
+  // @desc    Update user information
+  // @access  Private (authenticated users only)
+  public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const id: string = req.params.id;
+
+      // Extract the fields to update from the request body
+      const { username, email, bio, password } = req.body;
+      const userFields: UserPatch = {};
+
+      // Extract the fields to update from the request body
+      if (username) userFields.username = username;
+      if (email) {
+        // Check if the new email already exists
+        const emailExists = await User.findOne({ email });
+        if (emailExists) {
+          res.status(400).json({ msg: 'Email already in use' });
+        }
+
+        userFields.email = email;
+      }
+      if (bio || bio === '') userFields.bio = bio;
+      if (password) {
+        // Hash the password before saving
+        userFields.password = await bcrypt.hash(password, 10);
+      }
+
+      let user = await User.findById(id);
+
+      // If the user does not exist, return a 404 error
+      if (!user) {
+        res.status(404).json({ msg: 'User not found' });
+      }
+
+      // TODO: Authentication
+
+      user = await User.findByIdAndUpdate(
+        id,
+        { $set: userFields },
+        { new: true }, // Return the updated user
+      );
+
+      res.status(200).json({
+        msg: 'User details have been updated!',
+        user: { username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
+      });
     } catch (error) {
       next(error);
     }
