@@ -13,6 +13,7 @@ import { Routes } from '@interfaces/routes.interface';
 import { ErrorMiddleware } from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
 import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
 
 export class App {
   public app: express.Application;
@@ -29,6 +30,7 @@ export class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
+    this.connectToDB();
   }
 
   public listen() {
@@ -53,6 +55,7 @@ export class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+    this.app.use(bodyParser.json());
   }
 
   private initializeRoutes(routes: Routes[]) {
@@ -84,5 +87,20 @@ export class App {
   private initializeLimits() {
     this.app.use(bodyParser.json({ limit: MAX_FILE_SIZE }));
     this.app.use(bodyParser.urlencoded({ limit: MAX_FILE_SIZE, extended: true, parameterLimit: 50000 }));
+  }
+
+  private connectToDB() {
+    const options = {
+      connectTimeoutMS: 60000,
+    };
+
+    mongoose.connect(process.env.MONGO_URI, options).then(
+      () => {
+        logger.info('Successfully connected to database!');
+      },
+      err => {
+        logger.error(`**Unable to connect to database**\n${err}`);
+      },
+    );
   }
 }
