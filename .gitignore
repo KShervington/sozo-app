@@ -3,6 +3,7 @@
 
 # Logging files
 **/src/logs
+**/*turbo.log*
 
 # Files generated from building the app
 **/dist
