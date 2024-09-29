@@ -42,7 +42,7 @@ export class ProductController {
     }
   };
 
-  public getUserList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public getProductList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Get query params
       const queryObj: ParsedUrlQuery = url.parse(req.url, true).query;
@@ -51,20 +51,20 @@ export class ProductController {
       const limitParam: string | undefined = Array.isArray(queryObj.limit) ? queryObj.limit[0] : queryObj.limit;
 
       // If the limit value is undefined, default to 10
-      let userLimit: number = parseInt(limitParam || '10');
+      let productLimit: number = parseInt(limitParam || '20');
 
       // Perform range validations on number of users to return
-      if (userLimit < 1) {
-        userLimit = 10; // Default limit
-      } else if (userLimit > 100) {
-        userLimit = 100; // Maximum limit
+      if (productLimit < 1) {
+        productLimit = 20; // Default limit
+      } else if (productLimit > 100) {
+        productLimit = 100; // Maximum limit
       }
 
       // Fetch a list of users, but only return public information
-      const users = await User.find({}, 'username email bio').limit(userLimit);
+      const products = await Product.find({}, 'name price description seller').limit(productLimit);
 
       // If the user is found, return the user data (excluding password for security reasons)
-      res.json(users);
+      res.json(products);
     } catch (error) {
       next(error);
     }

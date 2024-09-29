@@ -13,7 +13,7 @@ export class ProductRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get('/products', this.user.getUserList);
+    this.router.get('/products', this.user.getProductList);
     this.router.get('/products/:id', this.user.getProduct);
     this.router.post('/products', ValidationMiddleware(ProductDto), this.user.createProduct);
     this.router.patch('/products/:id', ValidationMiddleware(ProductPatchDto), this.user.updateUser);
