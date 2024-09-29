@@ -70,24 +70,19 @@ export class ProductController {
     }
   };
 
-  public getUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public getProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const email = req.params.email;
+      const productId = req.params.id;
 
-      let user = await User.findOne({ email });
+      let product = await Product.findById(productId);
 
       // If the user does not exist, return a 404 error
-      if (!user) {
-        res.status(404).json({ msg: 'User not found' });
+      if (!product) {
+        res.status(404).json({ msg: 'Product not found' });
       }
 
-      // If the user is found, return the user data (excluding password for security reasons)
-      res.json({
-        username: user.username,
-        email: user.email,
-        bio: user.bio,
-        createdAt: user.createdAt,
-      });
+      // Return product data
+      res.json(product);
     } catch (error) {
       next(error);
     }
