@@ -12,10 +12,10 @@ Sozo's REST API is structured in a way that allows developers to easily fetch da
 
 ```http
 GET /users
-GET /users/{user_id}
-POST /users/create
-PATCH /users/{user_id}
-DELETE /users/{user_id}
+GET /users/:email
+POST /users
+PATCH /users/:id
+DELETE /users/:id
 
 GET /jobs/{job_id}
 POST /jobs/create
@@ -36,22 +36,17 @@ PATCH /pieces/{piece_id}
 Returns a list of all users.
 | Parameter | Type | Description
 | ----------- | :-----------: | ----------- |  
-| limit | `integer` | `optional` Maximum number of designer users to return; Default is 20. |
-| role | `string` | `optional` Type of users to return ('designer' or 'client') |
+| limit | `integer` | `optional` Maximum number of users to return; Default is 10. |
 
 **Response**
 
 Returns an array of objects containing the following data.
 | Key | Type | Description
 | ----------- | :-----------: | ----------- |
-| user_id | `string` | Unique value assigned when user is created in the database. |
+| \_id | `string` | Unique value assigned when user is created in the database. |
 | username | `string` | A user's display name; Also used for login. |
 | email | `string` | A user's email address. |
-| role | `string` | A user's role ('designer' or 'client'). |
-| first_name | `string` | A user's first name. |
-| last_name | `string` | A user's last name. |
 | bio | `string` | A description of the user. |
-| active_status | `number` | 1 indicates **active** **OR** 0 indicates **not active** |
 
 **Example**
 
@@ -66,119 +61,97 @@ Response:
 ```json
 [
   {
-    "user_id": "hTwR4QEXHYPf7Ua6tjjM",
+    "_id": "66e76191c87d92bfc5b68348",
     "username": "DrewDream",
     "email": "dreamlife@yahoo.com",
-    "role": "designer",
-    "first_name": "Drew",
-    "last_name": "Thompson"
-    "bio": "Bold stitches, fierce fabrics. Transforming threads into masterpieces. 🧵✨ #FashionAlchemy #StyleVisionary",
-    "active_status": 1
+    "bio": "Bold stitches, fierce fabrics. Transforming threads into masterpieces. 🧵✨ #FashionAlchemy #StyleVisionary"
   },
   {
-    "user_id": "Hfkq7urNonHMonGREKU3",
+    "_id": "66e773a8d84fc19d0aaf18ed",
     "username": "TaylorJ",
     "email": "taylor.joslin@gmail.com",
-    "role": "client",
-    "first_name": "Taylor",
-    "last_name": "Joslin",
-    "bio": "Dedicated to refining elegance through precision. Crafting timeless designs with meticulous attention to detail. Fashion designer focused on timeless style.",
-    "active_status": 1
+    "bio": "Dedicated to refining elegance through precision. Crafting timeless designs with meticulous attention to detail. Fashion designer focused on timeless style."
   }
 ]
 ```
 
 ---
 
-**GET** _/users/{user_id}_
+**GET** _/users/:email_
 
 Retrieve a single user account.
-| Parameter |
-| ----------- |  
-| No parameters |
+| Parameter |Type | Description
+| ----------- | ----------- | ----------- |
+| email | `string` | A user's email address. |
 
 **Reponse**
 
 Returns a single user object containing the following data.
 | Key | Type | Description
 | ----------- | :-----------: | ----------- |
-| user_id | `string` | Unique value assigned when user is created in the database. |
 | username | `string` | A user's display name. |
 | email | `string` | A user's email address. |
-| role | `string` | A user's role ('designer' or 'client'). |
-| first_name | `string` | A user's first name. |
-| last_name | `string` | A user's last name. |
 | bio | `string` | A description of the user (max length: 200 characters). |
-| active_status | `number` | 1 indicates **active** **OR** 0 indicates **not active** |
+| createdAt | `string` | A `datetime` string showing when the user was created. |
 
 **Example**
 
 Request:
 
 ```http
-GET /users/hTwR4QEXHYPf7Ua6tjjM
+GET /users/dreamlife@yahoo.com
 ```
 
 Response:
 
 ```json
 {
-  "user_id": "hTwR4QEXHYPf7Ua6tjjM",
   "username": "DrewDream",
-  "role": "designer",
-  "first_name": "Drew",
-  "last_name": "Thompson",
+  "email": "taylor.joslin@gmail.com",
   "bio": "Bold stitches, fierce fabrics. Transforming threads into masterpieces. 🧵✨ #FashionAlchemy #StyleVisionary",
-  "active_status": 1
+  "createdAt": "2024-09-15T22:39:13.838Z"
 }
 ```
 
 ---
 
-**POST** _/users/create_
+**POST** _/users_
 
 Creates a new user account.
 | Parameter | Type | Description
 | ----------- | :-----------: | ----------- |  
 | username | `string` | `required` User's display name. Does not allow special chatacters; Can be used for login. |
 | email | `string` | `required` User's email address; Can be used for login. |
-| role | `string` | `required` User's role ('designer' or 'client'). |
-| first_name | `string` | `required` User's first name. |
-| last_name | `string` | `required` User's last name. |
+| password | `string` | `required` User's password to be be used for login. |
 | bio | `string` | `optional` Description of the user (max length: 200 characters). |
 
 **Response**
 
-Returns a single user object containing the following data.
+Returns a message and a single user object containing the following data.
 
-| Key           | Type     | Description                                                 |
-| ------------- | -------- | ----------------------------------------------------------- |
-| user_id       | `string` | Unique value assigned when user is created in the database. |
-| username      | `string` | User's display name.                                        |
-| email         | `string` | User's email address.                                       |
-| role          | `string` | User's role ('designer' or 'client').                       |
-| first_name    | `string` | User's first name.                                          |
-| last_name     | `string` | User's last name.                                           |
-| bio           | `string` | Description of the user.                                    |
-| active_status | `number` | 1 indicates **active** **OR** 0 indicates **not active**    |
+| Key       | Type     | Description                                            |
+| --------- | -------- | ------------------------------------------------------ |
+| username  | `string` | User's display name.                                   |
+| email     | `string` | User's email address.                                  |
+| bio       | `string` | Description of the user.                               |
+| createdAt | `string` | A `datetime` string showing when the user was created. |
 
 **Example**
 
 Request:
 
 ```http
-POST /users/create
+POST /users
 ```
 
 Request Body:
 
 ```json
 {
-  "username": "RachelY",
-  "email": "rachel.yearny@gmail.com",
-  "role": "client",
-  "first_name": "Rachel",
-  "last_name": "Yearney"
+  "username": "ReinaSantos",
+  "email": "reina.santos@auto.com",
+  "password": "kbcskdbjkJVJ7KBB^*b!",
+  "bio": ""
 }
 ```
 
@@ -186,58 +159,53 @@ Response:
 
 ```json
 {
-  "user_id": "H094iAjZyPWr4rm0y9WL",
-  "username": "RachelY",
-  "email": "rachel.yearny@gmail.com",
-  "role": "client",
-  "first_name": "Rachel",
-  "last_name": "Yearny",
-  "bio": "",
-  "active_status": 1
+  "msg": "User created successfully",
+  "user": {
+    "username": "ReinaSantos",
+    "email": "reina.santos@auto.com",
+    "bio": "",
+    "createdAt": "2024-09-29T18:42:07.426Z"
+  }
 }
 ```
 
 ---
 
-**PATCH** _/users/{user_id}_ HTTP/1.1
+**PATCH** /users/:id
 
 Update parts of a user's profile information.
 | Parameter | Type | Description
 | ----------- | :-----------: | ----------- |  
 | username | `string` | `optional` A user's display name. Does not allow special chatacters; Can be used for login. |
 | email | `string` | `optional` A user's email address. |
-| first_name | `string` | `optional` A user's first name. |
-| last_name | `string` | `optional` A user's last name. |
+| password | `string` | `optional` User's password to be be used for login. |
 | bio | `string` | `optional` A description of the user. |
 
 **Response**
 
-Returns a single user object containing the following data.
+Returns a message and a single user object containing the following data.
 
-| Key           | Type     | Description                                                 |
-| ------------- | -------- | ----------------------------------------------------------- |
-| user_id       | `string` | Unique value assigned when user is created in the database. |
-| username      | `string` | A user's display name.                                      |
-| email         | `string` | A user's email address.                                     |
-| role          | `string` | A user's role ('designer' or 'client').                     |
-| first_name    | `string` | A user's first name.                                        |
-| last_name     | `string` | A user's last name.                                         |
-| bio           | `string` | A description of the user.                                  |
-| active_status | `number` | 1 indicates **active** **OR** 0 indicates **not active**    |
+| Key       | Type     | Description                                                 |
+| --------- | -------- | ----------------------------------------------------------- |
+| \_id      | `string` | Unique value assigned when user is created in the database. |
+| username  | `string` | User's display name.                                        |
+| email     | `string` | User's email address.                                       |
+| bio       | `string` | Description of the user.                                    |
+| createdAt | `string` | A `datetime` string showing when the user was created.      |
 
 **Example**
 
 Request:
 
 ```http
-PATCH /users/H094iAjZyPWr4rm0y9WL HTTP/1.1
+PATCH /users/e5e7t3a8d44fc19d0aaf18ed
 ```
 
 Request Body:
 
 ```json
 {
-  "username": "YearOfRachel",
+  "username": "RSantos",
   "bio": "Sculpting sophistication in every stitch. Empowering women through distinctive designs. Committed to redefining style with grace and purpose."
 }
 ```
@@ -246,50 +214,46 @@ Response:
 
 ```json
 {
-  "user_id": "H094iAjZyPWr4rm0y9WL",
-  "username": "YearOfRachel",
-  "email": "rachel.yearny@gmail.com",
-  "role": "client",
-  "first_name": "Rachel",
-  "last_name": "Yearny",
-  "bio": "Sculpting sophistication in every stitch. Empowering women through distinctive designs. Committed to redefining style with grace and purpose.",
-  "active_status": 1
+  "msg": "User details have been updated!",
+  "user": {
+    "_id": "e5e7t3a8d44fc19d0aaf18ed",
+    "username": "RSantos",
+    "email": "reina.santos@auto.com",
+    "bio": "Sculpting sophistication in every stitch. Empowering women through distinctive designs. Committed to redefining style with grace and purpose.",
+    "createdAt": "2024-09-29T18:42:07.426Z"
+  }
 }
 ```
 
 ---
 
-**DELETE** _/users/{user_id}_
+**DELETE** _/users/:id_
 
 Deletes a single user from the database.
-| Parameter |
-| ----------- |  
-| No parameters |
+| Parameter | Type | Description
+| ----------- | :-----------: | ----------- |
+| id | `string` | Unique value assigned when user is created in the database. |
 
 **Reponse**
 
-Returns an object containing the following data:
+Returns a json object containing a message.
 | Key | Type | Description
 | ----------- | ----------- | ----------- |
-| user_id | `string` | Unique value assigned when user is created in the database. |
-| username | `string` | A user's display name. |
-| deleted | `boolean` | `true` to indicate account was successfully deleted **OR** `false` to indicate the account was not deleted. |
+| msg | `string` | States that the user was successfully deleted. |
 
 **Example**
 
 Request:
 
 ```http
-DELETE /users/hTwR4QEXHYPf7Ua6tjjM
+DELETE /users/e5e7t3a8d44fc19d0aaf18ed
 ```
 
 Response:
 
 ```json
 {
-  "designer_id": "hTwR4QEXHYPf7Ua6tjjM",
-  "username": "DrewDream",
-  "deleted": true
+  "msg": "User successfully removed"
 }
 ```
 

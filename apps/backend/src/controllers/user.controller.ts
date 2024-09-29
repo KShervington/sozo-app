@@ -34,7 +34,10 @@ export class UserController {
 
         await user.save();
 
-        res.json({ msg: `User created successfully`, userObj: user });
+        res.json({
+          msg: `User created successfully`,
+          user: { username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
+        });
       });
     } catch (error) {
       next(error);
@@ -60,7 +63,7 @@ export class UserController {
       }
 
       // Fetch a list of users, but only return public information
-      const users = await User.find({}, 'username email').limit(userLimit);
+      const users = await User.find({}, 'username email bio').limit(userLimit);
 
       // If the user is found, return the user data (excluding password for security reasons)
       res.json(users);
@@ -82,7 +85,7 @@ export class UserController {
 
       // If the user is found, return the user data (excluding password for security reasons)
       res.json({
-        name: user.username,
+        username: user.username,
         email: user.email,
         bio: user.bio,
         createdAt: user.createdAt,
