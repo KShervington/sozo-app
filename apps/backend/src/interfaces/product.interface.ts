@@ -1,7 +1,6 @@
 export interface Product {
   name: string;
   price: number;
-  stock: number;
   description: string;
   imageUrl: string;
   nftId: string;
@@ -12,7 +11,6 @@ export interface Product {
 export interface ProductPatch {
   name?: string;
   price?: number;
-  stock?: number;
   description?: string;
   imageUrl?: string;
 }

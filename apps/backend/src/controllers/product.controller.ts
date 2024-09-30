@@ -8,7 +8,7 @@ import { ProductPatch } from '@/interfaces/product.interface';
 
 export class ProductController {
   public createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { name, description, price, category, imageUrl, stock, nftId } = req.body;
+    const { name, description, price, category, imageUrl, nftId } = req.body;
 
     const sellerId = req.body.seller;
 
@@ -26,7 +26,6 @@ export class ProductController {
         price,
         category,
         imageUrl,
-        stock,
         nftId,
         seller: sellerId, // Link the product to the seller
       });
@@ -108,13 +107,12 @@ export class ProductController {
       const id: string = req.params.id;
 
       // Extract the fields to update from the request body
-      const { name, price, description, imageUrl, stock } = req.body;
+      const { name, price, description, imageUrl } = req.body;
       const productFields: ProductPatch = {};
 
       // Extract the fields to update from the request body
       if (name) productFields.name = name;
       if (price) productFields.price = price;
-      if (stock) productFields.stock = stock;
       if (description) productFields.description = description;
       if (imageUrl) productFields.imageUrl = imageUrl;
 
@@ -135,7 +133,7 @@ export class ProductController {
 
       res.status(200).json({
         msg: 'Product details have been updated!',
-        product: { name: product.name, price: product.price, stock: product.stock, description: product.description, createdAt: product.createdAt },
+        product: { name: product.name, price: product.price, description: product.description, createdAt: product.createdAt },
       });
     } catch (error) {
       next(error);

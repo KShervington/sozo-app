@@ -19,11 +19,6 @@ export class ProductDto {
   @IsNotEmpty()
   public imageUrl: string;
 
-  @IsNumber()
-  @Min(0)
-  @IsNotEmpty()
-  public stock: number;
-
   @IsString()
   @IsNotEmpty()
   public nftId: string;
@@ -55,12 +50,6 @@ export class ProductPatchDto {
   @IsString()
   @IsNotEmpty()
   public imageUrl: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @IsNotEmpty()
-  public stock: number;
 
   @IsOptional()
   @IsString()

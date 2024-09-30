@@ -19,15 +19,11 @@ const ProductSchema = new Schema({
     type: String,
     required: true,
   },
+  // TODO:
   // otherImageUrls: {
   //   type: [String],
   //   required: false,
   // },
-  stock: {
-    // needs to be removed
-    type: Number,
-    default: 0,
-  },
   nftId: {
     type: String,
     required: false,
