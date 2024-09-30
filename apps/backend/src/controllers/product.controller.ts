@@ -88,13 +88,13 @@ export class ProductController {
     }
   };
 
-  public deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = req.params.id;
 
-      await User.findByIdAndDelete(id);
+      await Product.findByIdAndDelete(id);
 
-      res.status(200).json({ msg: 'User successfully removed' });
+      res.status(200).json({ msg: 'Product successfully removed' });
     } catch (error) {
       next(error);
     }

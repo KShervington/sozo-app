@@ -6,17 +6,17 @@ import { ProductDto, ProductPatchDto } from '@/dtos/product.dto';
 
 export class ProductRoute implements Routes {
   public router = Router();
-  public user = new ProductController();
+  public product = new ProductController();
 
   constructor() {
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
-    this.router.get('/products', this.user.getProductList);
-    this.router.get('/products/:id', this.user.getProduct);
-    this.router.post('/products', ValidationMiddleware(ProductDto), this.user.createProduct);
-    this.router.patch('/products/:id', ValidationMiddleware(ProductPatchDto), this.user.updateUser);
-    this.router.delete('/products/:id', this.user.deleteUser);
+    this.router.get('/products', this.product.getProductList);
+    this.router.get('/products/:id', this.product.getProduct);
+    this.router.post('/products', ValidationMiddleware(ProductDto), this.product.createProduct);
+    this.router.patch('/products/:id', ValidationMiddleware(ProductPatchDto), this.product.updateUser);
+    this.router.delete('/products/:id', this.product.deleteProduct);
   }
 }
