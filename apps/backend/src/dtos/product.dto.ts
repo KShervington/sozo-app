@@ -38,21 +38,37 @@ export class ProductPatchDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
-  public username: string;
+  public name: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  public price: number;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @IsEmail()
-  public email: string;
+  public description: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
-  public password: string;
+  public imageUrl: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  public stock: number;
 
   @IsOptional()
   @IsString()
-  public bio: string;
+  @IsNotEmpty()
+  public nftId: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  public seller: string;
 }

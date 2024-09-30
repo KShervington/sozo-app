@@ -103,49 +103,39 @@ export class ProductController {
   // @route   PATCH /users/:id
   // @desc    Update user information
   // @access  Private (authenticated users only)
-  public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id: string = req.params.id;
 
       // Extract the fields to update from the request body
-      const { username, email, bio, password } = req.body;
-      const userFields: ProductPatch = {};
+      const { name, price, description, imageUrl, stock } = req.body;
+      const productFields: ProductPatch = {};
 
       // Extract the fields to update from the request body
-      if (username) userFields.username = username;
-      if (email) {
-        // Check if the new email already exists
-        const emailExists = await User.findOne({ email });
-        if (emailExists) {
-          res.status(400).json({ msg: 'Email already in use' });
-        }
+      if (name) productFields.name = name;
+      if (price) productFields.price = price;
+      if (stock) productFields.stock = stock;
+      if (description) productFields.description = description;
+      if (imageUrl) productFields.imageUrl = imageUrl;
 
-        userFields.email = email;
-      }
-      if (bio || bio === '') userFields.bio = bio;
-      if (password) {
-        // Hash the password before saving
-        userFields.password = await bcrypt.hash(password, 10);
-      }
-
-      let user = await User.findById(id);
+      let product = await Product.findById(id);
 
       // If the user does not exist, return a 404 error
-      if (!user) {
-        res.status(404).json({ msg: 'User not found' });
+      if (!product) {
+        res.status(404).json({ msg: 'Product not found' });
       }
 
       // TODO: Authentication
 
-      user = await User.findByIdAndUpdate(
+      product = await Product.findByIdAndUpdate(
         id,
-        { $set: userFields },
+        { $set: productFields },
         { new: true }, // Return the updated user
       );
 
       res.status(200).json({
-        msg: 'User details have been updated!',
-        user: { username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
+        msg: 'Product details have been updated!',
+        product: { name: product.name, price: product.price, stock: product.stock, description: product.description, createdAt: product.createdAt },
       });
     } catch (error) {
       next(error);

@@ -10,8 +10,9 @@ export interface Product {
 }
 
 export interface ProductPatch {
-  username?: string;
-  email?: string;
-  password?: string;
-  bio?: string;
+  name?: string;
+  price?: number;
+  stock?: number;
+  description?: string;
+  imageUrl?: string;
 }

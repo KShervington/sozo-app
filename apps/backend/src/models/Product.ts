@@ -19,7 +19,12 @@ const ProductSchema = new Schema({
     type: String,
     required: true,
   },
+  // otherImageUrls: {
+  //   type: [String],
+  //   required: false,
+  // },
   stock: {
+    // needs to be removed
     type: Number,
     default: 0,
   },

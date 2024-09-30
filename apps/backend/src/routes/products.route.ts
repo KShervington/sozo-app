@@ -16,7 +16,7 @@ export class ProductRoute implements Routes {
     this.router.get('/products', this.product.getProductList);
     this.router.get('/products/:id', this.product.getProduct);
     this.router.post('/products', ValidationMiddleware(ProductDto), this.product.createProduct);
-    this.router.patch('/products/:id', ValidationMiddleware(ProductPatchDto), this.product.updateUser);
+    this.router.patch('/products/:id', ValidationMiddleware(ProductPatchDto), this.product.updateProduct);
     this.router.delete('/products/:id', this.product.deleteProduct);
   }
 }
