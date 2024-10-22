@@ -1,5 +1,11 @@
 # Sozo inFashion API Reference
 
+# Table of Contents
+
+[Description](#description)</br>
+[Users](#users)</br>
+[Products](#products)
+
 ## Description
 
 Sozo's REST API is structured in a way that allows developers to easily fetch data, make user-specific updates, and understand the information being provided. All responses are in JSON format and use standard HTTP response codes.
@@ -17,14 +23,11 @@ POST /users
 PATCH /users/:id
 DELETE /users/:id
 
-GET /jobs/{job_id}
-POST /jobs/create
-POST /jobs/{job_id}/cancel
-
-GET /pieces
-GET /pieces/{piece_id}
-POST /pieces/create
-PATCH /pieces/{piece_id}
+GET /products
+GET /products/:id
+POST /products
+PATCH /products/:id
+DELETE /products/:id
 ```
 
 ---
@@ -259,165 +262,32 @@ Response:
 
 ---
 
-## Jobs
+## Products
 
-**GET** _/jobs/{job_id}_
+**GET** /products
 
-Retrieve details of a single job, established between a client and designer user.
-| Parameter |
-| ----------- |  
-| No parameters |
-
-**Reponse**
-
-Returns a single job object containing the following data.
-| Key | Type | Description
-| ----------- | :-----------: | ----------- |
-| job_id | `string` | Unique value assigned when a job is created. |
-| client_id | `string` | Client user's unique id. |
-| designer_id | `string` | Designer user's unique id. |
-| payment_status | `string` | Status of payment for job. Possible values are `not paid` `pending` or `paid`. |
-| active_status | `number` | 1 indicates **active** **OR** 0 indicates **not active** |
-
-**Example**
-
-Request:
-
-```http
-GET /jobs/uD7uQ4xjuCT9spwhyNVRxiYk9
-```
-
-Response:
-
-```json
-{
-  "job_id": "uD7uQ4xjuCT9spwhyNVRxiYk9",
-  "client_id": "Hfkq7urNonHMonGREKU3",
-  "designer_id": "hTwR4QEXHYPf7Ua6tjjM",
-  "payment_status": "not paid",
-  "active_status": 1
-}
-```
-
----
-
-**POST** _/jobs/create_
-
-Creates a new job.
+Returns a list of products.
 | Parameter | Type | Description
 | ----------- | :-----------: | ----------- |  
-| client_id | `string` | `required` Client user's unique id. |
-| designer_id | `string` | `required` Designer user's unique id. |
+| limit | `integer` | `optional` Maximum number of products to return; Default is 20. |
 
 **Response**
 
-Returns a single job object containing the following data.
-
-| Key            | Type     | Description                                                                    |
-| -------------- | -------- | ------------------------------------------------------------------------------ |
-| job_id         | `string` | Unique value assigned when a job is created.                                   |
-| client_id      | `string` | A client user's unique id.                                                     |
-| designer_id    | `string` | A designer user's unique id.                                                   |
-| payment_status | `string` | Status of payment for job. Possible values are `not paid` `pending` or `paid`. |
-| active_status  | `number` | Indicates whether a job is active; 1 is **active** **OR** 0 is **not active**  |
-
-**Example**
-
-Request:
-
-```http
-POST /jobs/create
-```
-
-Request Body:
-
-```json
-{
-  "client_id": "Hfkq7urNonHMonGREKU3",
-  "designer_id": "hTwR4QEXHYPf7Ua6tjjM"
-}
-```
-
-Response:
-
-```json
-{
-  "job_id": "uD7uQ4xjuCT9spwhyNVRxiYk9",
-  "client_id": "Hfkq7urNonHMonGREKU3",
-  "designer_id": "hTwR4QEXHYPf7Ua6tjjM",
-  "payment_status": "not paid",
-  "active_status": 1
-}
-```
-
----
-
-**POST** _/jobs/{job_id}/cancel_
-
-Cancels an active job; The job must be in a cancelabe state (active_status == 1 && payment_status == "not paid").
-| Parameter |
-| ----------- |  
-| No parameters |
-
-**Reponse**
-
-Returns a single job object if the request was successful. Returns an error if the job is not in a cancelable state.
+Returns an array of objects representing products. Each object contains the following data.
 | Key | Type | Description
 | ----------- | :-----------: | ----------- |
-| job_id | `string` | Unique value assigned when a job is created. |
-| client_id | `string` | A client user's unique id. |
-| designer_id | `string` | A designer user's unique id. |
-| payment_status | `string` | Status of payment for job. Possible values are `not paid` `pending` or `paid`. |
-| active_status | `number` | 1 indicates **active** **OR** 0 indicates **not active** |
+| \_id | `string` | Unique value assigned when product is created in the database. |
+| name | `string` | A product's name. |
+| price | `number` | A floating point number representing the price of the product. |
+| description | `string` | A description of the product. |
+| seller | `string` | The ID of the user who created the product. |
 
 **Example**
 
 Request:
 
 ```http
-POST /jobs/{job_id}/cancel
-```
-
-Response:
-
-```json
-{
-  "job_id": "uD7uQ4xjuCT9spwhyNVRxiYk9",
-  "client_id": "Hfkq7urNonHMonGREKU3",
-  "designer_id": "hTwR4QEXHYPf7Ua6tjjM",
-  "payment_status": "not paid",
-  "active_status": 0
-}
-```
-
----
-
-## Pieces
-
-**GET** _/pieces_
-
-Returns a list of all designer users.
-| Parameter | Type | Description
-| ----------- | :-----------: | ----------- |  
-| limit | `integer` | `optional` Maximum number of designer users to return; Default is 20. |
-
-**Response**
-
-Returns an array of objects representing pieces created by designers. Each object contains the following data.
-| Key | Type | Description
-| ----------- | :-----------: | ----------- |
-| piece_id | `string` | Unique value assigned when a piece in the database. |
-| designer_id | `string` | A designer user's unique id. |
-| piece_name | `string` | A piece's name. Determined by the designer. |
-| image_name | `string` | Name of the image uploaded for the piece. |
-| description | `string` | A description of the piece. |
-
-**Example**
-
-Request:
-
-```http
-GET /pieces?limit=2
+GET /products?limit=2
 ```
 
 Response:
@@ -425,110 +295,114 @@ Response:
 ```json
 [
   {
-    "piece_id": "hgmjw3vx4bfnQs9",
-    "designer_id": "hTwR4QEXHYPf7Ua6tjjM",
-    "piece_name": "Stars & Spangles",
-    "image_name": "hgmjw3vx4bfnQs9.jpg",
-    "description": "Unveiling the \"Stars & Spangles\" hoodie: a premium cotton masterpiece embodying the spirit of the United States. Vibrant stars and stripes meticulously dance across this garment, a dynamic celebration of American pride. Perfect for Independence Day or any occasion, this hoodie seamlessly merges style with patriotism. Wear the colors that echo the nation's heartbeat, making the Stars & Spangles a timeless symbol of your love for the land of the free."
+    "_id": "66f9fe05f5b15ee42aa6ae5b",
+    "name": "Flip Flops",
+    "price": 109.87,
+    "description": "Formal brogues for business attire",
+    "seller": "66f99f7f67c080cc3043afc2"
   },
   {
-    "piece_id": "AgiUjJGhhKtX3oY",
-    "designer_id": "NRDF8FB61BuYThN2scFA",
-    "piece_name": "Stars & Spangles",
-    "image_name": "AgiUjJGhhKtX3oY.jpg",
-    "description": "\"The Raven's Veil\" is a bewitching cloak that cascades in mysterious ebony folds. Embroidered ravens soar across the midnight fabric, their feathers intricately detailed in silver thread. The garment whispers tales of ancient lore, weaving elegance with an enigmatic edge. Embrace the mystique, as the Raven's Veil envelops you in a silhouette of shadowed allure."
+    "_id": "66f9fe05f5b15ee42aa6ae5e",
+    "name": "Heels",
+    "price": 80.96,
+    "description": "Durable hiking boots for rugged trails",
+    "seller": "66f99f7f67c080cc3043afc2"
   }
 ]
 ```
 
 ---
 
-**POST** _/pieces/create_
+**GET** _/products/:id_
 
-Creates a piece.
-| Parameter | Type | Description
-| ----------- | :-----------: | ----------- |  
-| piece_name | `string` | `required` A piece's name. |
-| image_name | `string` | `required` Name of the image uploaded for the piece. |
-| description | `string` | `optional` A description of the piece (max length: 400 characters). |
-
-**Response**
-
-Returns a single piece object containing the following data.
-| Key | Type | Description
+Retrieve a single product.
+| Parameter |Type | Description
 | ----------- | ----------- | ----------- |
-| piece_id | `string` | Unique value assigned when a piece in the database. |
-| designer_id | `string` | A designer user's unique id. |
-| piece_name | `string` | A piece's name. Determined by the designer. |
-| image_name | `string` | Name of the image uploaded for the piece. |
-| description | `string` | A description of the piece. |
+| id | `string` | Unique value assigned when product is created in the database. |
+
+**Reponse**
+
+Returns a single product object containing the following data.
+| Key | Type | Description
+| ----------- | :-----------: | ----------- |
+| \_id | `string` | Unique value assigned when product is created in the database. |
+| name | `string` | A product's name. |
+| price | `number` | A floating point number representing the price of the product. |
+| description | `string` | A description of the product (max length: 400 characters). |
+| image_url | `string` | An internal url that references the image of the product uploaded by the seller. |
+| nftId | `string` | A unique ID representing the NFT created for the product. |
+| seller | `string` | The ID of the user who created the product. |
+| createdAt | `string` | A `datetime` string showing when the product was created. |
 
 **Example**
 
 Request:
 
 ```http
-POST /users/create
-```
-
-Request Body:
-
-```json
-{
-  "piece_name": "Red Monty",
-  "image_name": "IMG_46.jpg",
-  "description": ""
-}
+GET /products/66f9fe05f5b15ee42aa6ae61
 ```
 
 Response:
 
 ```json
 {
-  "piece_id": "1rjJDBYmLo5pgT7",
-  "designer_id": "YRmNWCQuQdAWbR8u7eP4",
-  "piece_name": "Red Monty",
-  "image_name": "1rjJDBYmLo5pgT7.jpg",
-  "description": ""
+  "_id": "66f9fe05f5b15ee42aa6ae61",
+  "name": "Hiking Boots",
+  "price": 109.05,
+  "description": "Lightweight running shoes for fitness",
+  "imageUrl": "http://example.com/heels_image.jpg",
+  "nftId": "unique-nft-id-5650",
+  "seller": "66f99f7f67c080cc3043afc2",
+  "createdAt": "2024-09-30T01:25:25.100Z",
+  "__v": 0
 }
 ```
 
 ---
 
-**PATCH** _/pieces/{piece_id}_ HTTP/1.1
+**POST** /products
 
-Updates information for a specific piece.
+Creates a product.
 | Parameter | Type | Description
 | ----------- | :-----------: | ----------- |  
-| piece_name | `string` | `optional` A piece's name. |
-| image_name | `string` | `optional` Name of the image uploaded for the piece. |
-| description | `string` | `optional` A description of the piece (max length: 400 characters). |
+| name | `string` | A product's name. |
+| price | `number` | A floating point number representing the price of the product. |
+| image_url | `string` | An internal url that references the image of the product uploaded by the seller. |
+| description | `string` | A description of the product (max length: 400 characters). |
+| seller | `string` | The ID of the user who created the product. |
 
 **Response**
 
-Returns a single piece object containing the following data.
+Returns a message and a single product object containing the following data.
 | Key | Type | Description
 | ----------- | ----------- | ----------- |
-| piece_id | `string` | Unique value assigned when a piece in the database. |
-| designer_id | `string` | A designer user's unique id. |
-| piece_name | `string` | A piece's name. Determined by the designer. |
-| image_name | `string` | Name of the image uploaded for the piece. |
-| description | `string` | A description of the piece. |
+| name | `string` | A product's name. |
+| price | `number` | A floating point number representing the price of the product. |
+| description | `string` | A description of the product (max length: 400 characters). |
+| image_url | `string` | An internal url that references the image of the product uploaded by the seller. |
+| nftId | `string` | A unique ID representing the NFT created for the product. |
+| seller | `string` | The ID of the user who created the product. |
+| \_id | `string` | Unique value assigned when product is created in the database. |
+| createdAt | `string` | A `datetime` string showing when the product was created. |
 
 **Example**
 
 Request:
 
 ```http
-PATCH /users/H094iAjZyPWr4rm0y9WL
+POST /products
 ```
 
 Request Body:
 
 ```json
 {
-  "piece_name": "Red Python",
-  "description": "This sizzling masterpiece entwines the fierce allure of red with a sleek python pattern. The sultry silhouette, adorned with glistening serpent scales, invites you to embrace the wild side. A bold statement, embodying passion and power in every slither."
+  "name": "Cardigan",
+  "description": "A sort of jacket that is terrible at keeping you warm but looks good.",
+  "price": 35.69,
+  "imageUrl": "http://example.com/cardigan_image.jpg",
+  "nftId": "unique-nft-id-1656",
+  "seller": "66f99e67619cad1068e2952b"
 }
 ```
 
@@ -536,10 +410,104 @@ Response:
 
 ```json
 {
-  "piece_id": "1rjJDBYmLo5pgT7",
-  "designer_id": "YRmNWCQuQdAWbR8u7eP4",
-  "piece_name": "Red Python",
-  "image_name": "1rjJDBYmLo5pgT7.jpg",
-  "description": "This sizzling masterpiece entwines the fierce allure of red with a sleek python pattern. The sultry silhouette, adorned with glistening serpent scales, invites you to embrace the wild side. A bold statement, embodying passion and power in every slither."
+  "msg": "Product created successfully",
+  "product": {
+    "name": "Cardigan",
+    "price": 35.69,
+    "description": "A sort of jacket that is terrible at keeping you warm but looks good.",
+    "imageUrl": "http://example.com/cardigan_image.jpg",
+    "nftId": "unique-nft-id-1656",
+    "seller": "66f99e67619cad1068e2952b",
+    "_id": "67171e7663e7624cd094afeb",
+    "createdAt": "2024-10-22T03:39:34.945Z",
+    "__v": 0
+  }
+}
+```
+
+---
+
+**PATCH** _/products/:id_
+
+Updates information for a specific piece.
+| Parameter | Type | Description
+| ----------- | :-----------: | ----------- |  
+| name | `string` | `optional` A product's name. |
+| price | `number` | `optional` A floating point number representing the price of the product. |
+| description | `string` | `optional` A description of the product (max length: 400 characters). |
+| image_url | `string` | `optional` An internal url that references the image of the product uploaded by the seller. |
+
+**Response**
+
+Returns a message and a single product object containing the following data.
+| Key | Type | Description
+| ----------- | ----------- | ----------- |
+| name | `string` | `optional` A product's name. |
+| price | `number` | `optional` A floating point number representing the price of the product. |
+| description | `string` | `optional` A description of the product (max length: 400 characters). |
+| image_url | `string` | `optional` An internal url that references the image of the product uploaded by the seller. |
+| createdAt | `string` | A `datetime` string showing when the product was created. |
+
+**Example**
+
+Request:
+
+```http
+PATCH /products/66f9fe05f5b15ee42aa6ae6a
+```
+
+Request Body:
+
+```json
+{
+  "name": "Formal Brogues",
+  "price": 17.86
+}
+```
+
+Response:
+
+```json
+{
+  "msg": "Product details have been updated!",
+  "product": {
+    "name": "Formal Brogues",
+    "price": 17.86,
+    "description": "Formal brogues for business attire",
+    "imageUrl": "http://example.com/heels_image.jpg",
+    "createdAt": "2024-09-30T01:25:25.122Z"
+  }
+}
+```
+
+---
+
+**DELETE** _/products/:id_
+
+Deletes a single user from the database.
+| Parameter | Type | Description
+| ----------- | :-----------: | ----------- |
+| id | `string` | Unique value assigned when user is created in the database. |
+
+**Reponse**
+
+Returns a json object containing a message.
+| Key | Type | Description
+| ----------- | ----------- | ----------- |
+| msg | `string` | States that the product was successfully deleted. |
+
+**Example**
+
+Request:
+
+```http
+DELETE /products/67171e7663e7624cd094afeb
+```
+
+Response:
+
+```json
+{
+  "msg": "Product successfully removed"
 }
 ```

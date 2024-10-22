@@ -133,7 +133,13 @@ export class ProductController {
 
       res.status(200).json({
         msg: 'Product details have been updated!',
-        product: { name: product.name, price: product.price, description: product.description, createdAt: product.createdAt },
+        product: {
+          name: product.name,
+          price: product.price,
+          description: product.description,
+          imageUrl: product.imageUrl,
+          createdAt: product.createdAt,
+        },
       });
     } catch (error) {
       next(error);
