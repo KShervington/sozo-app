@@ -110,7 +110,7 @@ Response:
 ```json
 {
   "username": "DrewDream",
-  "email": "taylor.joslin@gmail.com",
+  "email": "dreamlife@yahoo.com",
   "bio": "Bold stitches, fierce fabrics. Transforming threads into masterpieces. 🧵✨ #FashionAlchemy #StyleVisionary",
   "createdAt": "2024-09-15T22:39:13.838Z"
 }

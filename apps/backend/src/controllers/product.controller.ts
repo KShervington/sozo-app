@@ -118,17 +118,15 @@ export class ProductController {
 
       let product = await Product.findById(id);
 
-      // If the user does not exist, return a 404 error
+      // If the product does not exist, return a 404 error
       if (!product) {
         res.status(404).json({ msg: 'Product not found' });
       }
 
-      // TODO: Authentication
-
       product = await Product.findByIdAndUpdate(
         id,
         { $set: productFields },
-        { new: true }, // Return the updated user
+        { new: true }, // Return the updated product
       );
 
       res.status(200).json({
