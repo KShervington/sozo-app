@@ -6,6 +6,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { UserPatch } from '@/interfaces/user.interface';
 
 export class UserController {
+  // @route   POST /users
+  // @desc    Create a new user
   public createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { username, email, password, bio } = req.body;
 
@@ -44,6 +46,8 @@ export class UserController {
     }
   };
 
+  // @route   GET /users
+  // @desc    Retrieve information on multiple users
   public getUserList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Get query params
@@ -72,6 +76,8 @@ export class UserController {
     }
   };
 
+  // @route   GET /users/:id
+  // @desc    Retrieve information on a single user
   public getUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const email = req.params.email;
@@ -95,6 +101,8 @@ export class UserController {
     }
   };
 
+  // @route   DELETE /users/:id
+  // @desc    Delete a user
   public deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = req.params.id;
@@ -109,7 +117,6 @@ export class UserController {
 
   // @route   PATCH /users/:id
   // @desc    Update user information
-  // @access  Private (authenticated users only)
   public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id: string = req.params.id;
