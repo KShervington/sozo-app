@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { Product } from '@/models/Product';
 import { User } from '@/models/User';
-import * as bcrypt from 'bcrypt';
 import url from 'url';
 import { ParsedUrlQuery } from 'querystring';
 import { ProductPatch } from '@/interfaces/product.interface';
 
 export class ProductController {
+  // @route   POST /products
+  // @desc    Create a new product
   public createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { name, description, price, category, imageUrl, nftId } = req.body;
 
@@ -41,6 +42,8 @@ export class ProductController {
     }
   };
 
+  // @route   GET /products
+  // @desc    Retrieve information on multiple products
   public getProductList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Get query params
@@ -69,6 +72,8 @@ export class ProductController {
     }
   };
 
+  // @route   GET /products/:id
+  // @desc    Retrieve information on a single product
   public getProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const productId = req.params.id;
@@ -87,6 +92,8 @@ export class ProductController {
     }
   };
 
+  // @route   DELETE /products/:id
+  // @desc    Delete a product
   public deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id = req.params.id;
@@ -99,9 +106,8 @@ export class ProductController {
     }
   };
 
-  // @route   PATCH /users/:id
-  // @desc    Update user information
-  // @access  Private (authenticated users only)
+  // @route   PATCH /products/:id
+  // @desc    Update product information
   public updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const id: string = req.params.id;
