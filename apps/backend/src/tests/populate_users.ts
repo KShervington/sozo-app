@@ -1,13 +1,11 @@
-// Execute with node populate_products.ts
+// Execute with node populate_users.ts
 
-const productsTestData = [
+const usersTestData = [
   {
-    name: 'Flip Flops',
-    description: 'Formal brogues for business attire',
-    price: 109.87,
-    imageUrl: 'http://example.com/sandals_image.jpg',
-    nftId: 'unique-nft-id-7019',
-    seller: '66f99f7f67c080cc3043afc2',
+    username: 'ReinaSantos',
+    email: 'reina.santos@auto.com',
+    password: 'kbcskdbjkJVJ7KBB^*b!',
+    bio: '',
   },
   {
     name: 'Heels',
@@ -83,18 +81,18 @@ const productsTestData = [
   },
 ];
 
-const instantiateProductDb = async () => {
+const instantiateUserDb = async () => {
   const axios = require('axios');
-  const url = `http://localhost:3000/products`;
+  const url = `http://localhost:3000/users`;
 
-  for (const product of productsTestData) {
+  for (const user of usersTestData) {
     try {
-      const response = await axios.post(url, product);
-      console.log(`Successfully added: ${product.name}`);
+      const response = await axios.post(url, user);
+      console.log(`Successfully added: ${user.name}`);
     } catch (error) {
-      console.error(`Failed to add ${product.name}:\n${error}`);
+      console.error(`Failed to add ${user.name}:\n${error}`);
     }
   }
 };
 
-instantiateProductDb();
+instantiateUserDb();
