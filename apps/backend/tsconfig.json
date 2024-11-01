@@ -33,7 +33,7 @@
       "@services/*": ["services/*"],
       "@utils/*": ["utils/*"]
     },
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*.ts", "src/**/*.json", ".env"],
   "exclude": ["node_modules", "src/http", "src/logs"]
