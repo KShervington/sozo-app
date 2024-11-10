@@ -91,6 +91,7 @@ export class UserController {
 
       // If the user is found, return the user data (excluding password for security reasons)
       res.json({
+        _id: user._id,
         username: user.username,
         email: user.email,
         bio: user.bio,
@@ -111,6 +112,7 @@ export class UserController {
 
       res.status(200).json({ msg: 'User successfully removed' });
     } catch (error) {
+      res.status(404).json({ msg: 'User not found' });
       next(error);
     }
   };

@@ -109,6 +109,7 @@ Response:
 
 ```json
 {
+  "_id": "66e76191c87d92bfc5b68348",
   "username": "DrewDream",
   "email": "dreamlife@yahoo.com",
   "bio": "Bold stitches, fierce fabrics. Transforming threads into masterpieces. 🧵✨ #FashionAlchemy #StyleVisionary",

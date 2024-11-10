@@ -13,8 +13,11 @@
     "contracts:deploy:testnet": "turbo run deploy:testnet"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "eslint": "^8.57.0",
+    "jest": "^29.7.0",
     "prettier": "^3.2.5",
+    "supertest": "^7.0.0",
     "turbo": "latest",
     "vite-plugin-node-polyfills": "^0.22.0"
   },
