@@ -443,6 +443,7 @@ Updates information for a specific piece.
 Returns a message and a single product object containing the following data.
 | Key | Type | Description
 | ----------- | ----------- | ----------- |
+| \_id | `string` | Unique value assigned when product is created in the database. |
 | name | `string` | `optional` A product's name. |
 | price | `number` | `optional` A floating point number representing the price of the product. |
 | description | `string` | `optional` A description of the product (max length: 400 characters). |
@@ -472,6 +473,7 @@ Response:
 {
   "msg": "Product details have been updated!",
   "product": {
+    "_id": "66f9fe05f5b15ee42aa6ae6a",
     "name": "Formal Brogues",
     "price": 17.86,
     "description": "Formal brogues for business attire",

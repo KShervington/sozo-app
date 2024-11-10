@@ -102,6 +102,7 @@ export class ProductController {
 
       res.status(200).json({ msg: 'Product successfully removed' });
     } catch (error) {
+      res.status(404).json({ msg: 'Product not found' });
       next(error);
     }
   };
@@ -138,6 +139,7 @@ export class ProductController {
       res.status(200).json({
         msg: 'Product details have been updated!',
         product: {
+          _id: product._id,
           name: product.name,
           price: product.price,
           description: product.description,
