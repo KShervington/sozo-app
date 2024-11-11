@@ -4,11 +4,12 @@ import { initializeOpenAI } from './utils/initializeOpenAI';
 import { SubmissionRoute } from './routes/submission.route';
 import { UserRoute } from './routes/users.route';
 import { ProductRoute } from './routes/products.route';
+import { WalletRoute } from './routes/wallet.route';
 
 ValidateEnv();
 
 export const openAIHelper = initializeOpenAI();
 
-const app = new App([new SubmissionRoute(), new UserRoute(), new ProductRoute()]);
+const app = new App([new SubmissionRoute(), new UserRoute(), new ProductRoute(), new WalletRoute()]);
 
 app.listen();

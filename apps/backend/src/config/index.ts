@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { mnemonic } from '@vechain/sdk-core';
+import { Mnemonic } from '@vechain/sdk-core';
 // config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
 config({ path: `.env.development.local` }); // Tests were failing to run with the above line
 
@@ -12,4 +12,4 @@ export const { NETWORK_URL, NETWORK_TYPE } = process.env;
 export const { RECAPTCHA_SECRET_KEY } = process.env;
 export const { REWARD_AMOUNT } = process.env;
 
-export const ADMIN_PRIVATE_KEY = mnemonic.derivePrivateKey(ADMIN_MNEMONIC.split(' '));
+export const ADMIN_PRIVATE_KEY = Mnemonic.toPrivateKey(ADMIN_MNEMONIC.split(' '));
