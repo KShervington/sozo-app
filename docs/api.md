@@ -133,12 +133,13 @@ Creates a new user account.
 
 Returns a message and a single user object containing the following data.
 
-| Key       | Type     | Description                                            |
-| --------- | -------- | ------------------------------------------------------ |
-| username  | `string` | User's display name.                                   |
-| email     | `string` | User's email address.                                  |
-| bio       | `string` | Description of the user.                               |
-| createdAt | `string` | A `datetime` string showing when the user was created. |
+| Key       | Type     | Description                                                 |
+| --------- | -------- | ----------------------------------------------------------- |
+| \_id      | `string` | Unique value assigned when user is created in the database. |
+| username  | `string` | User's display name.                                        |
+| email     | `string` | User's email address.                                       |
+| bio       | `string` | Description of the user.                                    |
+| createdAt | `string` | A `datetime` string showing when the user was created.      |
 
 **Example**
 
@@ -165,6 +166,7 @@ Response:
 {
   "msg": "User created successfully",
   "user": {
+    "_id": "e5e7t3a8d44fc19d0aaf18ed",
     "username": "ReinaSantos",
     "email": "reina.santos@auto.com",
     "bio": "",

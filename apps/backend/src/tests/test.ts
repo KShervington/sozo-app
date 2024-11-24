@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { App } from '@/app';
 import { UserRoute } from '@/routes/users.route';
 import { ProductRoute } from '@/routes/products.route';
+import { WalletRoute } from '@/routes/wallet.route';
 
 // Mock data for testing
 const mockUserData = {
@@ -15,7 +16,7 @@ const mockUserData = {
 
 let mockUserId = '';
 
-const app = new App([new UserRoute(), new ProductRoute()]).getServer();
+const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute()]).getServer();
 
 // Test suite for User API endpoints
 describe('User API Endpoints', () => {
@@ -167,6 +168,79 @@ describe('Product API Endpoints', () => {
     } else {
       expect(response.statusCode).toBe(404);
       expect(response.body).toHaveProperty('msg', 'Product not found');
+    }
+  });
+});
+
+// Test suite for wallet API endpoints
+describe('Wallet API Endpoints', () => {
+  let testUserId: string;
+
+  beforeAll(async () => {
+    // Connect to the in-memory database if needed, or use a testing database
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('Connected to DB to perform Wallet tests');
+
+    // Create a new user for testing
+    const userResponse = await request(app).post('/users').send({ username: 'Test User', email: 'testuser@example.com', password: 'password123' });
+    testUserId = userResponse.body.user._id;
+  });
+
+  afterAll(async () => {
+    // Delete the test user
+    await request(app).delete(`/users/${testUserId}`);
+
+    // Disconnect from the database after all tests are complete
+    await mongoose.connection.close();
+    console.log('Disconnected from DB after Wallet tests');
+  });
+
+  // Test POST /wallet - Create a new wallet
+  it('should create a new wallet', async () => {
+    const response = await request(app).post('/wallet').send({ userId: testUserId });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('msg', 'Wallet created successfully');
+    expect(response.body.wallet).toHaveProperty('user', testUserId);
+  });
+
+  // Test GET /wallet/:userId - Retrieve wallet information
+  it('should retrieve wallet information', async () => {
+    const response = await request(app).get(`/wallet/${testUserId}`);
+
+    if (response.statusCode === 200) {
+      expect(response.body).toHaveProperty('user', testUserId);
+    } else {
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('message', 'No wallet found for this user');
+    }
+  });
+
+  // Test PATCH /wallet/:userId - Update wallet information
+  it('should update wallet information', async () => {
+    const nftList = ['nft1', 'nft2', 'nft3'];
+
+    const response = await request(app).patch(`/wallet/${testUserId}`).send({ nftList });
+
+    if (response.statusCode === 200) {
+      expect(response.body).toHaveProperty('msg', 'Wallet details have been updated!');
+      expect(response.body.wallet).toHaveProperty('user', testUserId);
+      expect(response.body.wallet).toHaveProperty('nftList', nftList);
+    } else {
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('message', 'No wallet found for this user');
+    }
+  });
+
+  // Test DELETE /wallet/:userId - Delete wallet
+  it('should delete a wallet', async () => {
+    const response = await request(app).delete(`/wallet/${testUserId}`);
+
+    if (response.statusCode === 200) {
+      expect(response.body).toHaveProperty('msg', 'Wallet has been deleted');
+    } else {
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('message', 'No wallet found for this user');
     }
   });
 });

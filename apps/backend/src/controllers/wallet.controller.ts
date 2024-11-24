@@ -27,7 +27,6 @@ export class WalletController {
 
       // Create a new wallet for the user
       const { walletAddress } = createBlockchainWallet();
-      const accountDetails = await thor.accounts.getAccount(walletAddress);
 
       // Create a new wallet for the user
       wallet = new Wallet({
@@ -113,7 +112,7 @@ export class WalletController {
 
       await Wallet.findByIdAndDelete(wallet._id);
 
-      res.status(200).json({ message: 'Wallet has been deleted' });
+      res.status(200).json({ msg: 'Wallet has been deleted' });
     } catch (error) {
       next(error);
     }
