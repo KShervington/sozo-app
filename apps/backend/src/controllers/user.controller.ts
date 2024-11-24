@@ -34,11 +34,11 @@ export class UserController {
           bio: userBio,
         });
 
-        await user.save();
+        user = await user.save();
 
         res.json({
           msg: `User created successfully`,
-          user: { username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
+          user: { _id: user._id, username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
         });
       });
     } catch (error) {
