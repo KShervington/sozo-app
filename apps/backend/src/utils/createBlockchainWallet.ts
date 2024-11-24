@@ -6,7 +6,7 @@ interface WalletDetails {
   publicKey: string;
 }
 
-export default function createWallet(): WalletDetails {
+export default function createBlockchainWallet(): WalletDetails {
   // Generate a random wallet
   const wallet = Wallet.createRandom();
 
