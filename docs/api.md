@@ -4,7 +4,8 @@
 
 [Description](#description)</br>
 [Users](#users)</br>
-[Products](#products)
+[Products](#products)</br>
+[Wallet](#wallet)
 
 ## Description
 
@@ -28,6 +29,11 @@ GET /products/:id
 POST /products
 PATCH /products/:id
 DELETE /products/:id
+
+GET /wallet/:userId
+POST /wallet
+PATCH /wallet/:id
+DELETE /wallet/:id
 ```
 
 ---
@@ -514,5 +520,189 @@ Response:
 ```json
 {
   "msg": "Product successfully removed"
+}
+```
+
+---
+
+## Wallet
+
+**POST** _/wallet_
+
+Creates a new wallet for a user.
+
+| Parameter |   Type   | Description                             |
+| --------- | :------: | --------------------------------------- |
+| userId    | `string` | User ID for whom the wallet is created. |
+
+**Response**
+
+Returns the created wallet object.
+
+| Key     |   Type   | Description                                                 |
+| ------- | :------: | ----------------------------------------------------------- |
+| msg     | `string` | Success message.                                            |
+| wallet  | `object` | The created wallet object.                                  |
+| balance | `number` | Initial balance of the wallet (default is 0).               |
+| address | `string` | Blockchain address of the wallet.                           |
+| user    | `string` | User ID associated with the wallet.                         |
+| nftList | `array`  | List of NFTs associated with the wallet (default is empty). |
+
+**Example**
+
+Request:
+
+```http
+POST /wallet
+```
+
+Request body:
+
+```json
+{
+  "userId": "66e76191c87d92bfc5b68348"
+}
+```
+
+Response:
+
+```json
+{
+  "msg": "Wallet created successfully",
+  "wallet": {
+    "balance": 0,
+    "address": "0x1234567890abcdef",
+    "user": "12345",
+    "nftList": []
+  }
+}
+```
+
+---
+
+**GET** _/wallet/:userId_
+
+Retrieves information on a single wallet.
+
+| Parameter |   Type   | Description                                          |
+| --------- | :------: | ---------------------------------------------------- |
+| userId    | `string` | User ID whose wallet information is to be retrieved. |
+
+**Response**
+
+Returns the wallet object.
+
+| Key     |   Type   | Description                              |
+| ------- | :------: | ---------------------------------------- |
+| balance | `number` | Current balance of the wallet.           |
+| address | `string` | Blockchain address of the wallet.        |
+| user    | `string` | User ID associated with the wallet.      |
+| nftList | `array`  | List of NFTs associated with the wallet. |
+
+**Example**
+
+Request:
+
+```http
+GET /wallet/66e76191c87d92bfc5b68348
+```
+
+Response:
+
+```json
+{
+  "_id": "67438db57352f7cd5cd4a439",
+  "balance": 5,
+  "address": "0xa6ABDc5A889b84abDafd4a1a6819Be21fBF4afbf",
+  "user": "66e76191c87d92bfc5b68348",
+  "nftList": [],
+  "createdAt": "2024-11-24T20:33:57.449Z",
+  "__v": 0
+}
+```
+
+---
+
+**PATCH** _/wallet/:userId_
+
+Updates wallet information.
+
+| Parameter |   Type   | Description                                                   |
+| --------- | :------: | ------------------------------------------------------------- |
+| userId    | `string` | `optional` User ID whose wallet information is to be updated. |
+| nftList   | `array`  | `optional` List of NFTs to update in the wallet.              |
+
+**Response**
+
+Returns the updated wallet object.
+
+| Key     |   Type   | Description                                      |
+| ------- | :------: | ------------------------------------------------ |
+| msg     | `string` | Success message.                                 |
+| wallet  | `object` | The updated wallet object.                       |
+| balance | `number` | Updated balance of the wallet.                   |
+| address | `string` | Blockchain address of the wallet.                |
+| user    | `string` | User ID associated with the wallet.              |
+| nftList | `array`  | Updated list of NFTs associated with the wallet. |
+
+**Example**
+
+Request:
+
+```http
+PATCH /wallet/66e76191c87d92bfc5b68348
+{
+  "nftList": ["nft1", "nft2", "nft3"]
+}
+```
+
+Response:
+
+```json
+{
+  "msg": "Wallet details have been updated!",
+  "wallet": {
+    "_id": "67438db57352f7cd5cd4a439",
+    "balance": 5,
+    "address": "0xa6ABDc5A889b84abDafd4a1a6819Be21fBF4afbf",
+    "user": "66e76191c87d92bfc5b68348",
+    "nftList": ["nft1", "nft2", "nft3"],
+    "createdAt": "2024-11-24T20:33:57.449Z",
+    "__v": 0
+  }
+}
+```
+
+---
+
+**DELETE** _/wallet/:userId_
+
+Deletes a user's wallet.
+
+| Parameter |   Type   | Description                            |
+| --------- | :------: | -------------------------------------- |
+| userId    | `string` | User ID whose wallet is to be deleted. |
+
+**Response**
+
+Returns a success message.
+
+| Key |   Type   | Description                                 |
+| --- | :------: | ------------------------------------------- |
+| msg | `string` | Success message indicating wallet deletion. |
+
+**Example**
+
+Request:
+
+```http
+DELETE /wallet/66e76191c87d92bfc5b68348
+```
+
+Response:
+
+```json
+{
+  "msg": "Wallet has been deleted"
 }
 ```
