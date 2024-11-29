@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Heading, Text, VStack } from '@chakra-ui/react';
 
 export const Header = () => {

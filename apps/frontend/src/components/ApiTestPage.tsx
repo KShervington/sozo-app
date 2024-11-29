@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Container, useToast, VStack } from '@chakra-ui/react';
 import { Header } from './Header';
 import { EndpointSection } from './EndpointSection';

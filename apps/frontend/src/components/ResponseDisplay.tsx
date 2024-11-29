@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Heading, Text } from '@chakra-ui/react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
