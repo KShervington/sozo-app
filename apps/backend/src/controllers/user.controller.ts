@@ -13,10 +13,18 @@ export class UserController {
     try {
       const { username, email, password, bio, walletAddress } = req.body;
 
+      let user = null;
+
       // Check if user already exists
-      let user = await User.findOne({
-        $or: [{ username }, { email }, { walletAddress }].filter(Boolean),
-      });
+      if (walletAddress){
+        user = await User.findOne({
+          $or: [{ username }, { email }, { walletAddress }].filter(Boolean),
+      });}
+      else {
+        user = await User.findOne({
+          $or: [{ username }, { email }].filter(Boolean),
+        });
+      }
 
       if (user) {
         throw new HttpException(400, 'Username, email, or wallet address already exists');
@@ -38,7 +46,7 @@ export class UserController {
 
       await user.save();
 
-      res.status(201).json({
+      res.status(200).json({
         message: 'User created successfully',
         user: {
           _id: user._id,
@@ -101,20 +109,19 @@ export class UserController {
     try {
       // Parse query params to determine which users to retrieve
       const queryObj: ParsedUrlQuery = url.parse(req.url, true).query;
-      const { hasWallet } = queryObj;
 
-      // If hasWallet is true, only return users with wallet addresses
-      const query = hasWallet === 'true' 
-        ? { walletAddress: { $exists: true, $ne: null } }
-        : {};
+      // Get the 'limit' query param if it exists
+      const limitParam: string | undefined = Array.isArray(queryObj.limit) ? queryObj.limit[0] : queryObj.limit;
+
+      // If the limit value is undefined, default to 10
+      let userLimit: number = parseInt(limitParam || '10');
 
       // Retrieve users excluding their password
-      const users = await User.find(query).select('-password');
+      const users = await User.find({}).select('-password').limit(userLimit);
 
-      res.status(200).json({
-        message: 'Users retrieved successfully',
+      res.status(200).json(
         users
-      });
+      );
     } catch (error) {
       next(error);
     }
@@ -126,16 +133,15 @@ export class UserController {
     try {
       const email = req.params.email;
 
-      let user = await User.findOne({ email });
+      let user = await User.findOne({ email }).select('-password');
 
       if (!user) {
-        throw new HttpException(404, 'User not found');
+        res.status(404).json({ message: 'User not found' });
       }
 
-      res.status(200).json({
-        message: 'User retrieved successfully',
+      res.status(200).json(
         user
-      });
+      );
     } catch (error) {
       next(error);
     }
@@ -149,9 +155,9 @@ export class UserController {
 
       await User.findByIdAndDelete(id);
 
-      res.status(200).json({ msg: 'User successfully removed' });
+      res.status(200).json({ message: 'User successfully removed' });
     } catch (error) {
-      res.status(404).json({ msg: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
       next(error);
     }
   };

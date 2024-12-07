@@ -39,8 +39,8 @@ export class WalletController {
       await wallet.save();
 
       res.status(200).json({
-        msg: `Wallet created successfully`,
-        wallet: wallet,
+        message: `Wallet created successfully`,
+        wallet,
       });
     } catch (error) {
       next(error);
@@ -89,8 +89,8 @@ export class WalletController {
       wallet = await Wallet.findByIdAndUpdate(wallet._id, { $set: { nftList, balance: updatedBalance } }, { new: true });
 
       res.status(200).json({
-        msg: 'Wallet details have been updated!',
-        wallet: wallet,
+        message: 'Wallet details have been updated!',
+        wallet,
       });
     } catch (error) {
       next(error);
@@ -112,7 +112,7 @@ export class WalletController {
 
       await Wallet.findByIdAndDelete(wallet._id);
 
-      res.status(200).json({ msg: 'Wallet has been deleted' });
+      res.status(200).json({ message: 'Wallet has been deleted' });
     } catch (error) {
       next(error);
     }

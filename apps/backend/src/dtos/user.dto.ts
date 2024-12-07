@@ -19,6 +19,10 @@ export class UserDto {
   @IsOptional()
   @IsString()
   public bio: string;
+
+  @IsOptional()
+  @IsString()
+  public walletAddress: string;
 }
 
 export class UserPatchDto {

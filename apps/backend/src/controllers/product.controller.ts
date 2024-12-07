@@ -45,9 +45,9 @@ export class ProductController {
 
       await product.save();
 
-      res.status(201).json({
+      res.status(200).json({
         message: 'Product created successfully',
-        product: product,
+        product,
       });
     } catch (error) {
       next(error);
@@ -61,21 +61,26 @@ export class ProductController {
       const queryObj: ParsedUrlQuery = url.parse(req.url, true).query;
       const { status } = queryObj;
 
+      // Get the 'limit' query param if it exists
+      const limitParam: string | undefined = Array.isArray(queryObj.limit) ? queryObj.limit[0] : queryObj.limit;
+
+      // If the limit value is undefined, default to 10
+      let productLimit: number = parseInt(limitParam || '20');
+
       // Create a query based on status if the status parameter is provided
       const query = status 
-        ? { status: { $exists: true, $eq: status } }
+        ? { 'status': { $exists: true, $eq: status } }
         : {};
 
-      const products = await Product.find(query)
+      const products = await Product.find(query).limit(productLimit)
         .populate({
           path: 'seller',
           select: 'username walletAddress'
         });
 
-      res.status(200).json({
-        message: 'Products retrieved successfully',
+      res.status(200).json(
         products
-      });
+      );
     } catch (error) {
       next(error);
     }
@@ -96,10 +101,9 @@ export class ProductController {
         throw new HttpException(404, 'Product not found');
       }
 
-      res.status(200).json({
-        message: 'Product retrieved successfully',
+      res.status(200).json(
         product
-      });
+      );
     } catch (error) {
       next(error);
     }
@@ -113,9 +117,9 @@ export class ProductController {
 
       await Product.findByIdAndDelete(id);
 
-      res.status(200).json({ msg: 'Product successfully removed' });
+      res.status(200).json({ message: 'Product successfully removed' });
     } catch (error) {
-      res.status(404).json({ msg: 'Product not found' });
+      res.status(404).json({ message: 'Product not found' });
       next(error);
     }
   };
