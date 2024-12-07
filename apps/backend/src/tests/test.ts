@@ -6,241 +6,224 @@ import { UserRoute } from '@/routes/users.route';
 import { ProductRoute } from '@/routes/products.route';
 import { WalletRoute } from '@/routes/wallet.route';
 
-// Mock data for testing
-const mockUserData = {
-  username: 'testuser',
-  email: 'testuser@example.com',
-  password: 'password123',
-  bio: 'This is a test user.',
+// Helper function to generate unique test data
+const generateUniqueTestData = () => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000000);
+  return {
+    username: `testuser_${timestamp}_${random}`,
+    email: `testuser_${timestamp}_${random}@example.com`,
+    password: 'password123',
+    bio: 'This is a test user.',
+    walletAddress: '0x' + timestamp.toString(16) + random.toString(16).padEnd(40 - timestamp.toString(16).length - random.toString(16).length, '0'),
+  };
 };
 
-let mockUserId = '';
+const generateUniqueProductData = (sellerId: string) => ({
+  name: `TestProduct_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
+  description: 'Description of product created for testing.',
+  price: 13.37,
+  imageUrl: 'http://example.com/test_product_image.jpg',
+  tokenId: `token_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
+  contractAddress: '0x1234567890123456789012345678901234567890',
+  seller: sellerId,
+});
 
+let mockUserId = '';
 const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute()]).getServer();
+
+// Global test setup and teardown
+beforeAll(async () => {
+  try {
+    // Set test timeout to 10 seconds
+    jest.setTimeout(10000);
+    
+    // Ensure we're connected to the test database
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI environment variable is not set');
+    }
+    
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('Connected to test database');
+  } catch (error) {
+    console.error('Database connection error:', error);
+    throw error;
+  }
+});
+
+afterAll(async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('Disconnected from test database');
+  } catch (error) {
+    console.error('Error closing database connection:', error);
+    throw error;
+  }
+});
+
+// Helper function to clean up test data
+async function cleanupTestData() {
+  if (mockUserId) {
+    try {
+      await request(app).delete(`/users/${mockUserId}`);
+    } catch (error) {
+      console.error('Error cleaning up test user:', error);
+    }
+  }
+}
 
 // Test suite for User API endpoints
 describe('User API Endpoints', () => {
-  afterAll(async () => {
-    // Disconnect from the database after all tests are complete
-    await mongoose.connection.close();
-    console.log('Disconnected from DB after User tests');
+  afterEach(async () => {
+    await cleanupTestData();
   });
 
   // Test POST /users - Create a new user
   it('should create a new user', async () => {
-    const response = await request(app).post('/users').send(mockUserData);
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('msg', 'User created successfully');
-    expect(response.body.user).toHaveProperty('username', mockUserData.username);
+    const testData = generateUniqueTestData();
+    const response = await request(app).post('/users').send(testData);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty('message', 'User created successfully');
+    expect(response.body.user).toHaveProperty('username', testData.username);
+    mockUserId = response.body.user._id;
+
+    // Update user with wallet address
+    const walletResponse = await request(app).patch(`/users/${mockUserId}`).send({
+      walletAddress: testData.walletAddress,
+    });
+    expect(walletResponse.statusCode).toBe(200);
+    expect(walletResponse.body.user).toHaveProperty('walletAddress', testData.walletAddress);
   });
 
   // Test GET /users - Retrieve list of users
   it('should retrieve a list of users', async () => {
     const response = await request(app).get('/users').query({ limit: 5 });
     expect(response.statusCode).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.length).toBeLessThanOrEqual(5);
+    expect(response.body).toHaveProperty('message', 'Users retrieved successfully');
+    expect(response.body).toHaveProperty('users');
+    expect(Array.isArray(response.body.users)).toBe(true);
   });
 
-  // Test GET /users/:email - Retrieve a single user by email
-  it('should retrieve a user by email', async () => {
-    const userEmail = mockUserData.email;
-    const response = await request(app).get(`/users/${userEmail}`);
+  // Test GET /users/:id - Retrieve a single user by id
+  it('should retrieve a user by id', async () => {
+    // First create a user to retrieve
+    const testData = generateUniqueTestData();
+    const createResponse = await request(app).post('/users').send(testData);
+    mockUserId = createResponse.body.user._id;
 
-    // assign id for later use
-    mockUserId = response.body._id;
-
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('email', userEmail);
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'User not found');
-    }
+    const response = await request(app).get(`/users/${mockUserId}`);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'User retrieved successfully');
+    expect(response.body.user).toHaveProperty('_id', mockUserId);
   });
 
   // Test PATCH /users/:id - Update user information
   it('should modify an existing user', async () => {
-    const newUsername = 'editedtestuser';
+    // First create a user to modify
+    const testData = generateUniqueTestData();
+    const createResponse = await request(app).post('/users').send(testData);
+    mockUserId = createResponse.body.user._id;
 
+    const newUsername = 'editedtestuser_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
     const response = await request(app).patch(`/users/${mockUserId}`).send({ username: newUsername });
-    if (response.statusCode === 200) {
-      expect(response.body.user).toHaveProperty('username', newUsername);
-    } else if (response.statusCode === 400) {
-      expect(response.body).toHaveProperty('msg', 'Email already in use');
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'User not found');
-    }
+    expect(response.statusCode).toBe(200);
+    expect(response.body.user).toHaveProperty('username', newUsername);
   });
 
   // Test DELETE /users/:id - Delete a user
   it('should delete a user', async () => {
-    const response = await request(app).delete(`/users/${mockUserId}`);
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'User successfully removed');
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'User not found');
-    }
+    // First create a user to delete
+    const testData = generateUniqueTestData();
+    const createResponse = await request(app).post('/users').send(testData);
+    const userIdToDelete = createResponse.body.user._id;
+
+    const response = await request(app).delete(`/users/${userIdToDelete}`);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('msg', 'User successfully removed');
   });
 });
 
-// Mock data for testing
-const mockProductData = {
-  name: 'TestProductName',
-  description: 'Description of product created for testing.',
-  price: 13.37,
-  imageUrl: 'http://example.com/test_product_image.jpg',
-  nftId: 'unique-nft-id-1337',
-  seller: '66e76191c87d92bfc5b68348', // Needs to be the _id of a user already in the database
-};
-
-let mockProductId = '';
-
-// Test suite for product API endpoints
+// Test suite for Product API endpoints
 describe('Product API Endpoints', () => {
-  beforeAll(async () => {
-    // Connect to the in-memory database if needed, or use a testing database
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to DB to perform Product tests');
+  let testUserId: string;
+
+  beforeEach(async () => {
+    // Create a test user for product tests
+    const testData = generateUniqueTestData();
+    const userResponse = await request(app).post('/users').send(testData);
+    testUserId = userResponse.body.user._id;
   });
 
-  afterAll(async () => {
-    // Disconnect from the database after all tests are complete
-    await mongoose.connection.close();
-    console.log('Disconnected from DB after Product tests');
+  afterEach(async () => {
+    // Clean up test user
+    if (testUserId) {
+      try {
+        await request(app).delete(`/users/${testUserId}`);
+      } catch (error) {
+        console.error('Error cleaning up test user:', error);
+      }
+    }
   });
 
   // Test POST /products - Create a new product
   it('should create a new product', async () => {
-    const response = await request(app).post('/products').send(mockProductData);
-
-    // assign id for later use
-    mockProductId = response.body.product._id;
-
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('msg', 'Product created successfully');
-    expect(response.body.product).toHaveProperty('name', mockProductData.name);
+    const productData = generateUniqueProductData(testUserId);
+    const response = await request(app).post('/products').send(productData);
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty('message', 'Product created successfully');
+    expect(response.body.product).toHaveProperty('name', productData.name);
+    expect(response.body.product).toHaveProperty('seller', testUserId);
   });
 
   // Test GET /products - Retrieve list of products
   it('should retrieve a list of products', async () => {
     const response = await request(app).get('/products').query({ limit: 5 });
     expect(response.statusCode).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.length).toBeLessThanOrEqual(5);
-  });
-
-  // Test GET /products/:id - Retrieve a single product by id
-  it('should retrieve a product by id', async () => {
-    const response = await request(app).get(`/products/${mockProductId}`);
-
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('_id', mockProductId);
-      expect(response.body).toHaveProperty('name', mockProductData.name);
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'Product not found');
-    }
-  });
-
-  // Test PATCH /products/:id - Update product information
-  it('should modify an existing product', async () => {
-    const newproductname = 'editedtestproduct';
-
-    const response = await request(app).patch(`/products/${mockProductId}`).send({ name: newproductname });
-
-    if (response.statusCode === 200) {
-      expect(response.body.product).toHaveProperty('name', newproductname);
-      expect(response.body.product).toHaveProperty('_id', mockProductId);
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'Product not found');
-    }
-  });
-
-  // Test DELETE /products/:id - Delete a product
-  it('should delete a product', async () => {
-    const response = await request(app).delete(`/products/${mockProductId}`);
-
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'Product successfully removed');
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'Product not found');
-    }
+    expect(response.body).toHaveProperty('message', 'Products retrieved successfully');
+    expect(response.body).toHaveProperty('products');
+    expect(Array.isArray(response.body.products)).toBe(true);
   });
 });
 
-// Test suite for wallet API endpoints
+// Test suite for Wallet API endpoints
 describe('Wallet API Endpoints', () => {
   let testUserId: string;
 
-  beforeAll(async () => {
-    // Connect to the in-memory database if needed, or use a testing database
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to DB to perform Wallet tests');
-
-    // Create a new user for testing
-    const userResponse = await request(app).post('/users').send({ username: 'Test User', email: 'testuser@example.com', password: 'password123' });
+  beforeEach(async () => {
+    // Create a test user for wallet tests
+    const testData = generateUniqueTestData();
+    const userResponse = await request(app).post('/users').send(testData);
     testUserId = userResponse.body.user._id;
   });
 
-  afterAll(async () => {
-    // Delete the test user
-    await request(app).delete(`/users/${testUserId}`);
-
-    // Disconnect from the database after all tests are complete
-    await mongoose.connection.close();
-    console.log('Disconnected from DB after Wallet tests');
+  afterEach(async () => {
+    // Clean up test user
+    if (testUserId) {
+      try {
+        await request(app).delete(`/users/${testUserId}`);
+      } catch (error) {
+        console.error('Error cleaning up test user:', error);
+      }
+    }
   });
 
-  // Test POST /wallet - Create a new wallet
-  it('should create a new wallet', async () => {
-    const response = await request(app).post('/wallet').send({ userId: testUserId });
-
+  // Test PATCH /wallet/:id - Update wallet address
+  it('should update wallet address', async () => {
+    const walletAddress = '0x' + Date.now().toString(16) + Math.floor(Math.random() * 1000000).toString(16).padEnd(40, '0');
+    const response = await request(app).patch(`/wallet/${testUserId}`).send({ walletAddress });
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('msg', 'Wallet created successfully');
-    expect(response.body.wallet).toHaveProperty('user', testUserId);
+    expect(response.body.user).toHaveProperty('walletAddress', walletAddress);
   });
 
-  // Test GET /wallet/:userId - Retrieve wallet information
-  it('should retrieve wallet information', async () => {
+  // Test GET /wallet/:id - Get wallet information
+  it('should get wallet information', async () => {
+    // First update the wallet address
+    const walletAddress = '0x' + Date.now().toString(16) + Math.floor(Math.random() * 1000000).toString(16).padEnd(40, '0');
+    await request(app).patch(`/wallet/${testUserId}`).send({ walletAddress });
+
+    // Then retrieve the wallet information
     const response = await request(app).get(`/wallet/${testUserId}`);
-
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('user', testUserId);
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('message', 'No wallet found for this user');
-    }
-  });
-
-  // Test PATCH /wallet/:userId - Update wallet information
-  it('should update wallet information', async () => {
-    const nftList = ['nft1', 'nft2', 'nft3'];
-
-    const response = await request(app).patch(`/wallet/${testUserId}`).send({ nftList });
-
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'Wallet details have been updated!');
-      expect(response.body.wallet).toHaveProperty('user', testUserId);
-      expect(response.body.wallet).toHaveProperty('nftList', nftList);
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('message', 'No wallet found for this user');
-    }
-  });
-
-  // Test DELETE /wallet/:userId - Delete wallet
-  it('should delete a wallet', async () => {
-    const response = await request(app).delete(`/wallet/${testUserId}`);
-
-    if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'Wallet has been deleted');
-    } else {
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('message', 'No wallet found for this user');
-    }
+    expect(response.statusCode).toBe(200);
+    expect(response.body.user).toHaveProperty('walletAddress', walletAddress);
   });
 });

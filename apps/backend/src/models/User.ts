@@ -1,4 +1,4 @@
-// models/User.js
+// models/User.ts
 import mongoose from 'mongoose';
 
 const UserSchema = new mongoose.Schema({
@@ -15,6 +15,12 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+  },
+  walletAddress: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true, // Allows multiple null values while maintaining uniqueness for non-null values
   },
   bio: {
     type: String,

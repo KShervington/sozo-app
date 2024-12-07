@@ -43,4 +43,9 @@ export class UserPatchDto {
   @IsOptional()
   @IsString()
   public bio: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  public walletAddress: string;
 }

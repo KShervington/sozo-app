@@ -1,4 +1,4 @@
-// models/User.js
+// models/Product.ts
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
@@ -19,14 +19,24 @@ const ProductSchema = new Schema({
     type: String,
     required: true,
   },
-  nftId: {
+  tokenId: {
     type: String,
-    required: false,
+    required: true,
+    unique: true,
+  },
+  contractAddress: {
+    type: String,
+    required: true,
   },
   seller: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+  },
+  status: {
+    type: String,
+    enum: ['available', 'sold', 'pending'],
+    default: 'available',
   },
   createdAt: {
     type: Date,

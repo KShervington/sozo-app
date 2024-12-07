@@ -3,8 +3,10 @@ export interface Product {
   price: number;
   description: string;
   imageUrl: string;
-  nftId: string;
+  tokenId: string;
+  contractAddress: string;
   seller: string;
+  status: 'available' | 'sold' | 'pending';
   createdAt: Date;
 }
 
@@ -13,4 +15,5 @@ export interface ProductPatch {
   price?: number;
   description?: string;
   imageUrl?: string;
+  status?: 'available' | 'sold' | 'pending';
 }
