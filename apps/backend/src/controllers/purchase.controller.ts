@@ -61,7 +61,7 @@ class PurchaseController {
   public getPurchaseHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId } = req.query;
-      
+
       if (!userId || typeof userId !== 'string') {
         throw new HttpException(400, 'User ID is required');
       }

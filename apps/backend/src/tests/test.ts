@@ -15,7 +15,7 @@ const mockUserData = {
   bio: 'This is a test user.',
 };
 
-const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute()]).getServer();
+const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute(), new PurchaseRoute()]).getServer();
 
 // Test suite for User API endpoints
 describe('User API Endpoints', () => {
@@ -268,109 +268,141 @@ describe('Wallet API Endpoints', () => {
 });
 
 // Test suite for Purchase API endpoints
-// describe('Purchase API Endpoints', () => {
-//   let testUser: any;
-//   let testProduct: any;
-//   let testPurchaseId: string;
+describe('Purchase API Endpoints', () => {
+  let testUser: any;
+  let testProduct: any;
+  let testPurchaseId: string;
 
-//   beforeAll(async () => {
-//     // Create a test user with wallet
-//     const userResponse = await request(app)
-//       .post('/users')
-//       .send({
-//         username: `purchaseTestUser_${Date.now()}`,
-//         email: `purchasetest_${Date.now()}@example.com`,
-//         password: 'testpass123',
-//         bio: 'Test user for purchase tests',
-//       });
-//     testUser = userResponse.body.user;
+  beforeAll(async () => {
+    console.log('Connected to DB to perform Purchase tests');
+    await mongoose.connect(process.env.MONGO_URI);
 
-//     // Create wallet for test user
-//     await request(app).post('/wallets/create').send({
-//       userId: testUser._id,
-//     });
+    // Create a test user with wallet
+    const userResponse = await request(app)
+      .post('/users')
+      .send({
+        username: `purchaseTestUser_${Date.now()}`,
+        email: `purchasetest_${Date.now()}@example.com`,
+        password: 'testpass123',
+        bio: 'Test user for purchase tests',
+        walletAddress: '0x1234567890abcdef', // Add wallet address directly
+      });
+    testUser = userResponse.body.user;
 
-//     // Create a test product
-//     const productResponse = await request(app).post('/products').send({
-//       name: 'Test NFT for Purchase',
-//       description: 'Test NFT created for purchase testing',
-//       price: 1.5,
-//       imageUrl: 'http://example.com/test_nft.jpg',
-//       tokenId: '12345',
-//       contractAddress: '0x1234567890abcdef',
-//       seller: testUser._id,
-//       status: 'available',
-//     });
-//     testProduct = productResponse.body.product;
-//   });
+    // Create a test product
+    const productResponse = await request(app).post('/products').send({
+      name: 'Test NFT for Purchase',
+      description: 'Test NFT created for purchase testing',
+      price: 1.5,
+      imageUrl: 'http://example.com/test_nft.jpg',
+      tokenId: '12345',
+      contractAddress: '0x1234567890abcdef',
+      seller: testUser._id,
+    });
+    testProduct = productResponse.body.product;
+  });
 
-//   afterAll(async () => {
-//     // Clean up: Delete test user, product, and related data
-//     if (testUser && testUser._id) {
-//       await request(app).delete(`/users/${testUser._id}`);
-//     }
-//     if (testProduct && testProduct._id) {
-//       await request(app).delete(`/products/${testProduct._id}`);
-//     }
-//   });
+  afterAll(async () => {
+    // Clean up: Delete test user, product, and related data
+    if (testUser && testUser._id) {
+      await request(app).delete(`/users/${testUser._id}`);
+    }
+    if (testProduct && testProduct._id) {
+      await request(app).delete(`/products/${testProduct._id}`);
+    }
+    await mongoose.disconnect();
+    console.log('Disconnected from DB after Purchase tests');
+  });
 
-//   // Test POST /purchases/create - Create a new purchase
-//   it('should create a new purchase', async () => {
-//     const response = await request(app).post('/purchases/create').send({
-//       productId: testProduct._id,
-//       userId: testUser._id,
-//       amount: testProduct.price,
-//     });
+  // Test POST /purchases/create - Create a new purchase
+  it('should create a new purchase', async () => {
+    const response = await request(app).post('/purchases/create').send({
+      productId: testProduct._id,
+      userId: testUser._id,
+      amount: testProduct.price,
+    });
 
-//     expect(response.statusCode).toBe(201);
-//     expect(response.body).toHaveProperty('message', 'Purchase created');
-//     expect(response.body).toHaveProperty('data');
-//     expect(response.body.data).toHaveProperty('_id');
-//     testPurchaseId = response.body.data._id;
-//   });
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty('data');
+    testPurchaseId = response.body.data._id;
+  });
 
-//   // Test POST /purchases/create - Fail with invalid product
-//   it('should fail to create purchase with invalid product', async () => {
-//     const response = await request(app).post('/purchases/create').send({
-//       productId: '507f1f77bcf86cd799439011', // Non-existent product ID
-//       userId: testUser._id,
-//       amount: 1.5,
-//     });
+  // Test GET /purchases/:id/status - Get purchase status
+  it('should get purchase status', async () => {
+    const response = await request(app).get(`/purchases/${testPurchaseId}/status`);
 
-//     expect(response.statusCode).toBe(404);
-//     expect(response.body).toHaveProperty('message', 'Product not found');
-//   });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('data');
+  });
 
-//   // Test POST /purchases/:purchaseId/process - Process a purchase
-//   it('should process a purchase', async () => {
-//     const response = await request(app).post(`/purchases/${testPurchaseId}/process`);
+  // Test POST /purchases/create - Invalid product
+  it('should fail to create purchase with invalid product', async () => {
+    const response = await request(app).post('/purchases/create').send({
+      productId: new mongoose.Types.ObjectId(),
+      userId: testUser._id,
+      amount: 1.5,
+    });
 
-//     expect(response.statusCode).toBe(200);
-//     expect(response.body).toHaveProperty('message', 'Purchase processed successfully');
-//   });
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toHaveProperty('message', 'Product not found');
+  });
 
-//   // Test GET /purchases/:purchaseId/status - Get purchase status
-//   it('should get purchase status', async () => {
-//     const response = await request(app).get(`/purchases/${testPurchaseId}/status`);
+  // Test POST /purchases/create - User without wallet
+  it('should fail to create purchase when user has no wallet', async () => {
+    // Create a user without a wallet
+    const noWalletUser = await request(app)
+      .post('/users')
+      .send({
+        username: `nowalletuser_${Date.now()}`,
+        email: `nowalletuser_${Date.now()}@example.com`,
+        password: 'testpass123',
+        bio: 'Test user without wallet',
+      });
 
-//     expect(response.statusCode).toBe(200);
-//     expect(response.body).toHaveProperty('data');
-//   });
+    const response = await request(app).post('/purchases/create').send({
+      productId: testProduct._id,
+      userId: noWalletUser.body.user._id,
+      amount: testProduct.price,
+    });
 
-//   // Test GET /purchases/history - Get purchase history
-//   it('should get purchase history for user', async () => {
-//     const response = await request(app).get('/purchases/history').query({ userId: testUser._id });
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty('message', 'Buyer must have a wallet address to purchase NFTs');
 
-//     expect(response.statusCode).toBe(200);
-//     expect(response.body).toHaveProperty('data');
-//     expect(Array.isArray(response.body.data)).toBe(true);
-//   });
+    // Clean up
+    await request(app).delete(`/users/${noWalletUser.body.user._id}`);
+  });
 
-//   // Test GET /purchases/history - Fail with invalid user
-//   it('should fail to get purchase history for invalid user', async () => {
-//     const response = await request(app).get('/purchases/history').query({ userId: '507f1f77bcf86cd799439011' }); // Non-existent user ID
+  // Test POST /purchases/:id/process - Process a purchase
+  it('should process a purchase', async () => {
+    // First create a purchase
+    const createResponse = await request(app).post('/purchases/create').send({
+      productId: testProduct._id,
+      userId: testUser._id,
+      amount: testProduct.price,
+    });
 
-//     expect(response.statusCode).toBe(404);
-//     expect(response.body).toHaveProperty('message', 'User not found');
-//   });
-// });
+    const purchaseId = createResponse.body.data._id;
+    const response = await request(app).post(`/purchases/${purchaseId}/process`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Purchase processed successfully');
+    expect(response.body).toHaveProperty('data');
+  });
+
+  // Test GET /purchases/history - Get purchase history for user
+  it('should get purchase history for user', async () => {
+    const response = await request(app).get(`/purchases/history?userId=${testUser._id}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(Array.isArray(response.body.data)).toBe(true);
+  });
+
+  // Test GET /purchases/history - Invalid user
+  it('should fail to get purchase history for invalid user', async () => {
+    const response = await request(app).get(`/purchases/history?userId=507f1f77bcf86cd799439011`);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toHaveProperty('message', 'User not found');
+  });
+});

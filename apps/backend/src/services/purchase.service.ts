@@ -2,6 +2,32 @@ import { HttpException } from '@/exceptions/HttpException';
 import Purchase, { PurchaseStatus } from '@/models/Purchase';
 import NFTService from './nft.service';
 import { Product } from '@/models/Product';
+import { User } from '@/models/User';
+import { Types } from 'mongoose';
+
+interface PopulatedProduct {
+  _id: Types.ObjectId;
+  tokenId: string;
+  seller: {
+    _id: Types.ObjectId;
+    walletAddress: string;
+  };
+}
+
+interface PopulatedBuyer {
+  _id: Types.ObjectId;
+  walletAddress: string;
+}
+
+interface IPurchase {
+  _id: Types.ObjectId;
+  buyer: PopulatedBuyer;
+  product: PopulatedProduct;
+  status: PurchaseStatus;
+  transactionHash?: string;
+  nftTransferStatus: boolean;
+  amount: number;
+}
 
 class PurchaseService {
   private nftService: NFTService;
@@ -13,8 +39,8 @@ class PurchaseService {
   async createPurchase(buyerId: string, productId: string, amount: number) {
     try {
       const purchase = new Purchase({
-        buyer: buyerId,
-        product: productId,
+        buyer: new Types.ObjectId(buyerId),
+        product: new Types.ObjectId(productId),
         amount,
         status: PurchaseStatus.PENDING,
       });
@@ -26,20 +52,18 @@ class PurchaseService {
     }
   }
 
-  async processPurchase(purchaseId: string) {
+  async processPurchase(purchaseId: string): Promise<IPurchase> {
     try {
       const purchase = await Purchase.findById(purchaseId)
-        .populate({
-          path: 'buyer',
-          select: 'walletAddress',
-        })
-        .populate({
+        .populate<{ buyer: PopulatedBuyer }>('buyer', '_id walletAddress')
+        .populate<{ product: PopulatedProduct }>({
           path: 'product',
           populate: {
             path: 'seller',
-            select: 'walletAddress',
+            select: '_id walletAddress',
           },
-        });
+          select: '_id tokenId seller',
+        }).lean();
 
       if (!purchase) {
         throw new HttpException(404, 'Purchase not found');
@@ -62,15 +86,23 @@ class PurchaseService {
       }
 
       // Update status to payment processing
-      purchase.status = PurchaseStatus.PAYMENT_PROCESSING;
-      await purchase.save();
+      const updatedPurchase = await Purchase.findByIdAndUpdate(
+        purchaseId,
+        { status: PurchaseStatus.PAYMENT_PROCESSING },
+        { new: true }
+      ).populate<{ buyer: PopulatedBuyer }>('buyer', '_id walletAddress')
+       .populate<{ product: PopulatedProduct }>({
+         path: 'product',
+         populate: {
+           path: 'seller',
+           select: '_id walletAddress',
+         },
+         select: '_id tokenId seller',
+       }).lean();
 
-      // TODO: Implement payment processing logic here
-      // For now, we'll assume payment is successful
-
-      // Update status to NFT transfer pending
-      purchase.status = PurchaseStatus.NFT_TRANSFER_PENDING;
-      await purchase.save();
+      if (!updatedPurchase) {
+        throw new HttpException(500, 'Failed to update purchase status');
+      }
 
       try {
         // Update product status to pending
@@ -88,62 +120,116 @@ class PurchaseService {
         }
 
         // Update purchase with transaction details
-        purchase.transactionHash = transactionHash;
-        purchase.nftTransferStatus = true;
-        purchase.status = PurchaseStatus.COMPLETED;
-        await purchase.save();
+        const completedPurchase = await Purchase.findByIdAndUpdate(
+          purchaseId,
+          {
+            status: PurchaseStatus.COMPLETED,
+            transactionHash,
+            nftTransferStatus: true,
+          },
+          { new: true }
+        ).populate<{ buyer: PopulatedBuyer }>('buyer', '_id walletAddress')
+         .populate<{ product: PopulatedProduct }>({
+           path: 'product',
+           populate: {
+             path: 'seller',
+             select: '_id walletAddress',
+           },
+           select: '_id tokenId seller',
+         }).lean();
+
+        if (!completedPurchase) {
+          throw new HttpException(500, 'Failed to complete purchase');
+        }
 
         // Update product status to sold
         await Product.findByIdAndUpdate(purchase.product._id, { status: 'sold' });
 
-        return purchase;
+        return completedPurchase as IPurchase;
       } catch (blockchainError) {
         // Revert product status to available on failure
         await Product.findByIdAndUpdate(purchase.product._id, { status: 'available' });
-        console.error('Blockchain transfer failed:', blockchainError);
-        throw new HttpException(500, `NFT transfer failed: ${blockchainError.message}`);
+
+        // Update purchase status to failed
+        const failedPurchase = await Purchase.findByIdAndUpdate(
+          purchaseId,
+          { status: PurchaseStatus.FAILED },
+          { new: true }
+        ).populate<{ buyer: PopulatedBuyer }>('buyer', '_id walletAddress')
+         .populate<{ product: PopulatedProduct }>({
+           path: 'product',
+           populate: {
+             path: 'seller',
+             select: '_id walletAddress',
+           },
+           select: '_id tokenId seller',
+         }).lean();
+
+        if (!failedPurchase) {
+          throw new HttpException(500, 'Failed to update purchase status');
+        }
+
+        throw new HttpException(500, 'Failed to process NFT transfer');
       }
     } catch (error) {
-      // Update purchase status to failed
-      if (purchaseId) {
-        const failedPurchase = await Purchase.findById(purchaseId);
-        if (failedPurchase) {
-          failedPurchase.status = PurchaseStatus.FAILED;
-          failedPurchase.paymentDetails = {
-            error: error.message,
-            failedAt: new Date().toISOString(),
-          };
-          await failedPurchase.save();
-
-          // Ensure product status is reverted to available
-          if (failedPurchase.product) {
-            await Product.findByIdAndUpdate(failedPurchase.product, { status: 'available' });
-          }
-        }
+      if (error instanceof HttpException) {
+        throw error;
       }
-
-      console.error('Purchase processing failed:', error);
-      throw error instanceof HttpException ? error : new HttpException(500, `Purchase processing failed: ${error.message}`);
+      throw new HttpException(500, 'Failed to process purchase');
     }
   }
 
-  async getPurchaseStatus(purchaseId: string) {
+  async getPurchaseStatus(purchaseId: string): Promise<IPurchase> {
     try {
-      const purchase = await Purchase.findById(purchaseId);
+      const purchase = await Purchase.findById(purchaseId)
+        .populate<{ buyer: PopulatedBuyer }>('buyer', '_id walletAddress')
+        .populate<{ product: PopulatedProduct }>({
+          path: 'product',
+          populate: {
+            path: 'seller',
+            select: '_id walletAddress',
+          },
+          select: '_id tokenId seller',
+        }).lean();
+
       if (!purchase) {
         throw new HttpException(404, 'Purchase not found');
       }
-      return purchase;
+
+      return purchase as IPurchase;
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException(500, 'Failed to get purchase status');
     }
   }
 
-  async getPurchaseHistory(userId: string) {
+  async getPurchaseHistory(userId: string): Promise<IPurchase[]> {
     try {
-      const purchases = await Purchase.find({ buyer: userId }).populate('product').sort({ createdAt: -1 });
-      return purchases;
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new HttpException(404, 'User not found');
+      }
+
+      const purchases = await Purchase.find({ buyer: new Types.ObjectId(userId) })
+        .populate<{ buyer: PopulatedBuyer }>('buyer', '_id walletAddress')
+        .populate<{ product: PopulatedProduct }>({
+          path: 'product',
+          populate: {
+            path: 'seller',
+            select: '_id walletAddress',
+          },
+          select: '_id tokenId seller',
+        })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      return purchases as IPurchase[];
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException(500, 'Failed to get purchase history');
     }
   }
