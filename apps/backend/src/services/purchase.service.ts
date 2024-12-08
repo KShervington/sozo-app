@@ -1,7 +1,7 @@
-import { HttpException } from '../exceptions/HttpException';
-import Purchase, { PurchaseStatus } from '../models/Purchase';
+import { HttpException } from '@/exceptions/HttpException';
+import Purchase, { PurchaseStatus } from '@/models/Purchase';
 import NFTService from './nft.service';
-import Product from '../models/Product';
+import { Product } from '@/models/Product';
 
 class PurchaseService {
   private nftService: NFTService;
@@ -16,7 +16,7 @@ class PurchaseService {
         buyer: buyerId,
         product: productId,
         amount,
-        status: PurchaseStatus.PENDING
+        status: PurchaseStatus.PENDING,
       });
 
       await purchase.save();
@@ -31,14 +31,14 @@ class PurchaseService {
       const purchase = await Purchase.findById(purchaseId)
         .populate({
           path: 'buyer',
-          select: 'walletAddress'
+          select: 'walletAddress',
         })
         .populate({
           path: 'product',
           populate: {
             path: 'seller',
-            select: 'walletAddress'
-          }
+            select: 'walletAddress',
+          },
         });
 
       if (!purchase) {
@@ -80,7 +80,7 @@ class PurchaseService {
         const transactionHash = await this.nftService.transferNFT(
           purchase.product.seller.walletAddress,
           purchase.buyer.walletAddress,
-          purchase.product.tokenId
+          purchase.product.tokenId,
         );
 
         if (!transactionHash) {
@@ -111,7 +111,7 @@ class PurchaseService {
           failedPurchase.status = PurchaseStatus.FAILED;
           failedPurchase.paymentDetails = {
             error: error.message,
-            failedAt: new Date().toISOString()
+            failedAt: new Date().toISOString(),
           };
           await failedPurchase.save();
 
@@ -121,11 +121,9 @@ class PurchaseService {
           }
         }
       }
-      
+
       console.error('Purchase processing failed:', error);
-      throw error instanceof HttpException 
-        ? error 
-        : new HttpException(500, `Purchase processing failed: ${error.message}`);
+      throw error instanceof HttpException ? error : new HttpException(500, `Purchase processing failed: ${error.message}`);
     }
   }
 
@@ -143,9 +141,7 @@ class PurchaseService {
 
   async getPurchaseHistory(userId: string) {
     try {
-      const purchases = await Purchase.find({ buyer: userId })
-        .populate('product')
-        .sort({ createdAt: -1 });
+      const purchases = await Purchase.find({ buyer: userId }).populate('product').sort({ createdAt: -1 });
       return purchases;
     } catch (error) {
       throw new HttpException(500, 'Failed to get purchase history');

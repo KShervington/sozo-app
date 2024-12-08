@@ -14,9 +14,9 @@ export class WalletRoute implements Routes {
 
   // New routes will be declared here
   private initializeRoutes() {
-    this.router.get('/wallet/:userId', this.wallet.getWallet);
-    this.router.post('/wallet', ValidationMiddleware(WalletDto), this.wallet.createWallet);
-    this.router.patch('/wallet/:userId', this.wallet.updateWallet);
-    this.router.delete('/wallet/:userId', this.wallet.deleteWallet);
+    this.router.get('/wallets/:userId', this.wallet.getWallet);
+    this.router.post('/wallets', ValidationMiddleware(WalletDto), this.wallet.createWallet);
+    this.router.patch('/wallets/:userId', this.wallet.updateWallet);
+    this.router.delete('/wallets/:userId', this.wallet.deleteWallet);
   }
 }

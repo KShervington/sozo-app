@@ -11,6 +11,6 @@ ValidateEnv();
 
 export const openAIHelper = initializeOpenAI();
 
-const app = new App([new SubmissionRoute(), new UserRoute(), new ProductRoute(), new WalletRoute(), new PurchaseRoute()]);
+const app = new App([new SubmissionRoute(), new UserRoute(), new ProductRoute(), new WalletRoute()]);
 
 app.listen();
