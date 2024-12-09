@@ -4,7 +4,7 @@ import { Wallet } from '@/models/Wallet';
 import createBlockchainWallet from '@/utils/createBlockchainWallet';
 
 export class WalletController {
-  // @route   POST /wallet
+  // @route   POST /wallets
   // @desc    Create a new wallet
   public createWallet = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -47,7 +47,7 @@ export class WalletController {
     }
   };
 
-  // @route   GET /wallet
+  // @route   GET /wallets/:userId
   // @desc    Retrieve information on a single wallet
   public getWallet = async (req: Request, res: Response) => {
     try {
@@ -66,7 +66,7 @@ export class WalletController {
     }
   };
 
-  // @route   PATCH /wallet/:userId
+  // @route   PATCH /wallets/:userId
   // @desc    Update wallet information
   public updateWallet = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -97,7 +97,7 @@ export class WalletController {
     }
   };
 
-  // @route   DELETE /wallet/:userId
+  // @route   DELETE /wallets/:userId
   // @desc    Delete user's wallet
   public deleteWallet = async (req: Request, res: Response, next: NextFunction) => {
     try {

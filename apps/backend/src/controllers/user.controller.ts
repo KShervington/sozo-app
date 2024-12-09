@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '@/models/User';
+import { Wallet } from '@/models/Wallet';
 import * as bcrypt from 'bcrypt';
 import url from 'url';
 import { ParsedUrlQuery } from 'querystring';
@@ -16,15 +17,9 @@ export class UserController {
       let user = null;
 
       // Check if user already exists
-      if (walletAddress){
-        user = await User.findOne({
-          $or: [{ username }, { email }, { walletAddress }].filter(Boolean),
-      });}
-      else {
-        user = await User.findOne({
-          $or: [{ username }, { email }].filter(Boolean),
-        });
-      }
+      user = await User.findOne({
+        $or: [{ username }, { email }].filter(Boolean),
+      });
 
       if (user) {
         throw new HttpException(400, 'Username, email, or wallet address already exists');
@@ -34,7 +29,7 @@ export class UserController {
       const userBio = bio || '';
 
       const hash = await bcrypt.hash(password, 10);
-      
+
       // Create a new user with hashed password
       user = new User({
         username,
@@ -46,6 +41,17 @@ export class UserController {
 
       await user.save();
 
+      // If wallet address is provided, create a wallet entry
+      if (walletAddress) {
+        const wallet = new Wallet({
+          balance: 0,
+          address: walletAddress,
+          user: user._id,
+          nftList: [],
+        });
+        await wallet.save();
+      }
+
       res.status(200).json({
         message: 'User created successfully',
         user: {
@@ -54,7 +60,7 @@ export class UserController {
           email: user.email,
           bio: user.bio,
           walletAddress: user.walletAddress,
-          createdAt: user.createdAt
+          createdAt: user.createdAt,
         },
       });
     } catch (error) {
@@ -73,22 +79,14 @@ export class UserController {
       if (updates.walletAddress) {
         const existingUser = await User.findOne({
           walletAddress: updates.walletAddress,
-          _id: { $ne: userId }
+          _id: { $ne: userId },
         });
         if (existingUser) {
           throw new HttpException(409, 'Wallet address is already in use');
         }
       }
 
-      // Don't allow updating sensitive fields
-      // delete updates.password;
-      // delete updates.email;
-
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { $set: updates },
-        { new: true }
-      ).select('-password');
+      const user = await User.findByIdAndUpdate(userId, { $set: updates }, { new: true }).select('-password');
 
       if (!user) {
         throw new HttpException(404, 'User not found');
@@ -96,7 +94,7 @@ export class UserController {
 
       res.status(200).json({
         message: 'User updated successfully',
-        user
+        user,
       });
     } catch (error) {
       next(error);
@@ -119,9 +117,7 @@ export class UserController {
       // Retrieve users excluding their password
       const users = await User.find({}).select('-password').limit(userLimit);
 
-      res.status(200).json(
-        users
-      );
+      res.status(200).json(users);
     } catch (error) {
       next(error);
     }
@@ -139,9 +135,7 @@ export class UserController {
         res.status(404).json({ message: 'User not found' });
       }
 
-      res.status(200).json(
-        user
-      );
+      res.status(200).json(user);
     } catch (error) {
       next(error);
     }

@@ -15,13 +15,31 @@ const mockUserData = {
   bio: 'This is a test user.',
 };
 
+const mockUserWithWalletData = {
+  username: `walletuser_${Date.now()}`,
+  email: `walletuser_${Date.now()}@example.com`,
+  password: 'password123',
+  bio: 'This is a test user with wallet.',
+  walletAddress: `0x742d35Cc6634C0532925a3b844Bc454e4438f${Date.now().toString(16).slice(-3)}`,
+};
+
 const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute(), new PurchaseRoute()]).getServer();
 
 // Test suite for User API endpoints
 describe('User API Endpoints', () => {
   let mockUserId = '';
+  let mockUserWithWalletId = '';
 
   afterAll(async () => {
+    // Clean up the test users
+    if (mockUserId) {
+      await request(app).delete(`/users/${mockUserId}`);
+    }
+    if (mockUserWithWalletId) {
+      await request(app).delete(`/users/${mockUserWithWalletId}`);
+      // Clean up the wallet as well
+      await request(app).delete(`/wallets/${mockUserWithWalletId}`);
+    }
     // Disconnect from the database after all tests are complete
     await mongoose.connection.close();
     console.log('Disconnected from DB after User tests');
@@ -34,6 +52,26 @@ describe('User API Endpoints', () => {
     expect(response.body).toHaveProperty('message', 'User created successfully');
     expect(response.body.user).toHaveProperty('username', mockUserData.username);
     mockUserId = response.body.user._id;
+  });
+
+  // Test POST /users - Create a new user with wallet
+  it('should create a new user with wallet', async () => {
+    const response = await request(app).post('/users').send(mockUserWithWalletData);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'User created successfully');
+    expect(response.body.user).toHaveProperty('username', mockUserWithWalletData.username);
+    expect(response.body.user).toHaveProperty('walletAddress', mockUserWithWalletData.walletAddress);
+    mockUserWithWalletId = response.body.user._id;
+
+    // Verify wallet was created
+    const walletResponse = await request(app).get(`/wallets/${mockUserWithWalletId}`);
+    expect(walletResponse.statusCode).toBe(200);
+    expect(walletResponse.body).toHaveProperty('address', mockUserWithWalletData.walletAddress);
+    expect(walletResponse.body).toHaveProperty('user', mockUserWithWalletId);
+    expect(walletResponse.body).toHaveProperty('balance', 0);
+    expect(walletResponse.body).toHaveProperty('nftList');
+    expect(Array.isArray(walletResponse.body.nftList)).toBe(true);
+    expect(walletResponse.body.nftList).toHaveLength(0);
   });
 
   // Test GET /users - Retrieve list of users
@@ -112,7 +150,7 @@ describe('Product API Endpoints', () => {
         username: `productTestUser_${Date.now()}`,
         email: `producttest_${Date.now()}@example.com`,
         password: 'password123',
-        walletAddress: '0x37xjkeb50ebf024081727125e2e074hfh95vv9m',
+        walletAddress: `0x37xjkeb50ebf024081727125e2e074hfh95vv9m${Date.now().toString(16).slice(-3)}`,
       });
     testUserId = mockProductData.seller = userResponse.body.user._id;
   });
@@ -285,7 +323,7 @@ describe('Purchase API Endpoints', () => {
         email: `purchasetest_${Date.now()}@example.com`,
         password: 'testpass123',
         bio: 'Test user for purchase tests',
-        walletAddress: '0x1234567890abcdef', // Add wallet address directly
+        walletAddress: `0x1234567890abcdef${Date.now().toString(16).slice(-3)}`, // Add wallet address directly
       });
     testUser = userResponse.body.user;
 
