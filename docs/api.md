@@ -7,7 +7,6 @@
 [Products](#products)</br>
 [Wallet](#wallet)</br>
 [Purchases](#purchases)</br>
-[Submissions](#submissions)
 
 ## Description
 
@@ -41,8 +40,6 @@ POST /purchases/create
 POST /purchases/:purchaseId/process
 GET /purchases/:purchaseId/status
 GET /purchases/history
-
-POST /submitReceipt
 ```
 
 ---
