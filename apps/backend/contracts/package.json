@@ -1,0 +1,12 @@
+{
+  "name": "sozo-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Sozo NFT marketplace",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.0"
+  }
+}

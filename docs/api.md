@@ -5,7 +5,9 @@
 [Description](#description)</br>
 [Users](#users)</br>
 [Products](#products)</br>
-[Wallet](#wallet)
+[Wallet](#wallet)</br>
+[Purchases](#purchases)</br>
+[Submissions](#submissions)
 
 ## Description
 
@@ -30,10 +32,17 @@ POST /products
 PATCH /products/:id
 DELETE /products/:id
 
-GET /wallet/:userId
-POST /wallet
-PATCH /wallet/:id
-DELETE /wallet/:id
+GET /wallets/:userId
+POST /wallets
+PATCH /wallets/:userId
+DELETE /wallets/:userId
+
+POST /purchases/create
+POST /purchases/:purchaseId/process
+GET /purchases/:purchaseId/status
+GET /purchases/history
+
+POST /submitReceipt
 ```
 
 ---
@@ -527,7 +536,7 @@ Response:
 
 ## Wallet
 
-**POST** _/wallet_
+**POST** _/wallets_
 
 Creates a new wallet for a user.
 
@@ -553,7 +562,7 @@ Returns the created wallet object.
 Request:
 
 ```http
-POST /wallet
+POST /wallets
 ```
 
 Request body:
@@ -580,7 +589,7 @@ Response:
 
 ---
 
-**GET** _/wallet/:userId_
+**GET** _/wallets/:userId_
 
 Retrieves information on a single wallet.
 
@@ -604,7 +613,7 @@ Returns the wallet object.
 Request:
 
 ```http
-GET /wallet/66e76191c87d92bfc5b68348
+GET /wallets/66e76191c87d92bfc5b68348
 ```
 
 Response:
@@ -623,7 +632,7 @@ Response:
 
 ---
 
-**PATCH** _/wallet/:userId_
+**PATCH** _/wallets/:userId_
 
 Updates wallet information.
 
@@ -650,7 +659,7 @@ Returns the updated wallet object.
 Request:
 
 ```http
-PATCH /wallet/66e76191c87d92bfc5b68348
+PATCH /wallets/66e76191c87d92bfc5b68348
 {
   "nftList": ["nft1", "nft2", "nft3"]
 }
@@ -675,7 +684,7 @@ Response:
 
 ---
 
-**DELETE** _/wallet/:userId_
+**DELETE** _/wallets/:userId_
 
 Deletes a user's wallet.
 
@@ -696,7 +705,7 @@ Returns a success message.
 Request:
 
 ```http
-DELETE /wallet/66e76191c87d92bfc5b68348
+DELETE /wallets/66e76191c87d92bfc5b68348
 ```
 
 Response:
@@ -704,5 +713,190 @@ Response:
 ```json
 {
   "msg": "Wallet has been deleted"
+}
+```
+
+---
+
+## Purchases
+
+**POST** _/purchases/create_
+
+Create a new purchase transaction for a product.
+
+| Parameter |   Type   | Description                        |
+| --------- | :------: | ---------------------------------- |
+| productId | `string` | ID of the product to be purchased  |
+| userId    | `string` | ID of the user making the purchase |
+| amount    | `number` | Purchase amount                    |
+
+**Response**
+
+Returns a purchase object containing the following data.
+
+| Key     |   Type   | Description                          |
+| ------- | :------: | ------------------------------------ |
+| data    | `object` | The created purchase object          |
+| message | `string` | Success message ("Purchase created") |
+
+**Example**
+
+Request:
+
+```http
+POST /purchases/create
+```
+
+Request Body:
+
+```json
+{
+  "productId": "66f9fe05f5b15ee42aa6ae5b",
+  "userId": "66e76191c87d92bfc5b68348",
+  "amount": 109.87
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "_id": "67438db57352f7cd5cd4a440",
+    "productId": "66f9fe05f5b15ee42aa6ae5b",
+    "userId": "66e76191c87d92bfc5b68348",
+    "amount": 109.87,
+    "status": "pending",
+    "createdAt": "2024-12-09T19:02:57.449Z"
+  },
+  "message": "Purchase created"
+}
+```
+
+---
+
+**POST** _/purchases/:purchaseId/process_
+
+Process an existing purchase transaction.
+
+| Parameter  |   Type   | Description                        |
+| ---------- | :------: | ---------------------------------- |
+| purchaseId | `string` | ID of the purchase to be processed |
+
+**Response**
+
+Returns the processed purchase object.
+
+| Key     |   Type   | Description                                         |
+| ------- | :------: | --------------------------------------------------- |
+| data    | `object` | The processed purchase object with updated status   |
+| message | `string` | Success message ("Purchase processed successfully") |
+
+**Example**
+
+Request:
+
+```http
+POST /purchases/67438db57352f7cd5cd4a440/process
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "_id": "67438db57352f7cd5cd4a440",
+    "productId": "66f9fe05f5b15ee42aa6ae5b",
+    "userId": "66e76191c87d92bfc5b68348",
+    "amount": 109.87,
+    "status": "completed",
+    "processedAt": "2024-12-09T19:03:57.449Z"
+  },
+  "message": "Purchase processed successfully"
+}
+```
+
+---
+
+**GET** _/purchases/:purchaseId/status_
+
+Get the status of a specific purchase.
+
+| Parameter  |   Type   | Description                        |
+| ---------- | :------: | ---------------------------------- |
+| purchaseId | `string` | ID of the purchase to check status |
+
+**Response**
+
+Returns the current status of the purchase.
+
+| Key     |   Type   | Description                                   |
+| ------- | :------: | --------------------------------------------- |
+| data    | `object` | Object containing the purchase status details |
+| message | `string` | Success message ("Purchase status retrieved") |
+
+**Example**
+
+Request:
+
+```http
+GET /purchases/67438db57352f7cd5cd4a440/status
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "status": "completed",
+    "lastUpdated": "2024-12-09T19:03:57.449Z"
+  },
+  "message": "Purchase status retrieved"
+}
+```
+
+---
+
+**GET** _/purchases/history_
+
+Get the purchase history for a user.
+
+| Parameter |   Type   | Description                                |
+| --------- | :------: | ------------------------------------------ |
+| userId    | `string` | ID of the user to get purchase history for |
+
+**Response**
+
+Returns an array of purchase objects for the specified user.
+
+| Key     |   Type   | Description                                    |
+| ------- | :------: | ---------------------------------------------- |
+| data    | `array`  | Array of purchase objects                      |
+| message | `string` | Success message ("Purchase history retrieved") |
+
+**Example**
+
+Request:
+
+```http
+GET /purchases/history?userId=66e76191c87d92bfc5b68348
+```
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "_id": "67438db57352f7cd5cd4a440",
+      "productId": "66f9fe05f5b15ee42aa6ae5b",
+      "userId": "66e76191c87d92bfc5b68348",
+      "amount": 109.87,
+      "status": "completed",
+      "createdAt": "2024-12-09T19:02:57.449Z",
+      "processedAt": "2024-12-09T19:03:57.449Z"
+    }
+  ],
+  "message": "Purchase history retrieved"
 }
 ```

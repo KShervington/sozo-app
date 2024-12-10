@@ -1,45 +1,100 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '@/models/User';
+import { Wallet } from '@/models/Wallet';
 import * as bcrypt from 'bcrypt';
 import url from 'url';
 import { ParsedUrlQuery } from 'querystring';
 import { UserPatch } from '@/interfaces/user.interface';
+import { HttpException } from '@/exceptions/HttpException';
 
 export class UserController {
   // @route   POST /users
   // @desc    Create a new user
   public createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { username, email, password, bio } = req.body;
-
     try {
+      const { username, email, password, bio, walletAddress } = req.body;
+
+      let user = null;
+
       // Check if user already exists
-      let user = await User.findOne({
-        $or: [{ username }, { email }],
+      user = await User.findOne({
+        $or: [{ username }, { email }].filter(Boolean),
       });
 
-      // Perform step to handle existing user
       if (user) {
-        res.status(400).json({ msg: 'Username or email already exists' });
+        throw new HttpException(400, 'Username, email, or wallet address already exists');
       }
 
       // Handle bio missing from request
-      let userBio = bio === undefined ? '' : bio;
+      const userBio = bio || '';
 
-      bcrypt.hash(password, 10, async function (err, hash) {
-        // Create a new user with hashed password
-        user = new User({
-          username,
-          email,
-          password: hash,
-          bio: userBio,
+      const hash = await bcrypt.hash(password, 10);
+
+      // Create a new user with hashed password
+      user = new User({
+        username,
+        email,
+        password: hash,
+        bio: userBio,
+        walletAddress,
+      });
+
+      await user.save();
+
+      // If wallet address is provided, create a wallet entry
+      if (walletAddress) {
+        const wallet = new Wallet({
+          balance: 0,
+          address: walletAddress,
+          user: user._id,
+          nftList: [],
         });
+        await wallet.save();
+      }
 
-        user = await user.save();
+      res.status(200).json({
+        message: 'User created successfully',
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          bio: user.bio,
+          walletAddress: user.walletAddress,
+          createdAt: user.createdAt,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-        res.json({
-          msg: `User created successfully`,
-          user: { _id: user._id, username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
+  // @route   PATCH /users/:id
+  // @desc    Update user information
+  public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.params.id;
+      const updates: UserPatch = req.body;
+
+      // If updating wallet address, check if it's already in use
+      if (updates.walletAddress) {
+        const existingUser = await User.findOne({
+          walletAddress: updates.walletAddress,
+          _id: { $ne: userId },
         });
+        if (existingUser) {
+          throw new HttpException(409, 'Wallet address is already in use');
+        }
+      }
+
+      const user = await User.findByIdAndUpdate(userId, { $set: updates }, { new: true }).select('-password');
+
+      if (!user) {
+        throw new HttpException(404, 'User not found');
+      }
+
+      res.status(200).json({
+        message: 'User updated successfully',
+        user,
       });
     } catch (error) {
       next(error);
@@ -50,7 +105,7 @@ export class UserController {
   // @desc    Retrieve information on multiple users
   public getUserList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // Get query params
+      // Parse query params to determine which users to retrieve
       const queryObj: ParsedUrlQuery = url.parse(req.url, true).query;
 
       // Get the 'limit' query param if it exists
@@ -59,44 +114,28 @@ export class UserController {
       // If the limit value is undefined, default to 10
       let userLimit: number = parseInt(limitParam || '10');
 
-      // Perform range validations on number of users to return
-      if (userLimit < 1) {
-        userLimit = 10; // Default limit
-      } else if (userLimit > 100) {
-        userLimit = 100; // Maximum limit
-      }
+      // Retrieve users excluding their password
+      const users = await User.find({}).select('-password').limit(userLimit);
 
-      // Fetch a list of users, but only return public information
-      const users = await User.find({}, 'username email bio').limit(userLimit);
-
-      // If the user is found, return the user data (excluding password for security reasons)
-      res.json(users);
+      res.status(200).json(users);
     } catch (error) {
       next(error);
     }
   };
 
-  // @route   GET /users/:id
+  // @route   GET /users/:email
   // @desc    Retrieve information on a single user
   public getUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const email = req.params.email;
 
-      let user = await User.findOne({ email });
+      let user = await User.findOne({ email }).select('-password');
 
-      // If the user does not exist, return a 404 error
       if (!user) {
-        res.status(404).json({ msg: 'User not found' });
+        res.status(404).json({ message: 'User not found' });
       }
 
-      // If the user is found, return the user data (excluding password for security reasons)
-      res.json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        bio: user.bio,
-        createdAt: user.createdAt,
-      });
+      res.status(200).json(user);
     } catch (error) {
       next(error);
     }
@@ -110,60 +149,9 @@ export class UserController {
 
       await User.findByIdAndDelete(id);
 
-      res.status(200).json({ msg: 'User successfully removed' });
+      res.status(200).json({ message: 'User successfully removed' });
     } catch (error) {
-      res.status(404).json({ msg: 'User not found' });
-      next(error);
-    }
-  };
-
-  // @route   PATCH /users/:id
-  // @desc    Update user information
-  public updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const id: string = req.params.id;
-
-      // Extract the fields to update from the request body
-      const { username, email, bio, password } = req.body;
-      const userFields: UserPatch = {};
-
-      // Extract the fields to update from the request body
-      if (username) userFields.username = username;
-      if (email) {
-        // Check if the new email already exists
-        const emailExists = await User.findOne({ email });
-        if (emailExists) {
-          res.status(400).json({ msg: 'Email already in use' });
-        }
-
-        userFields.email = email;
-      }
-      if (bio || bio === '') userFields.bio = bio;
-      if (password) {
-        // Hash the password before saving
-        userFields.password = await bcrypt.hash(password, 10);
-      }
-
-      let user = await User.findById(id);
-
-      // If the user does not exist, return a 404 error
-      if (!user) {
-        res.status(404).json({ msg: 'User not found' });
-      }
-
-      // TODO: Authentication
-
-      user = await User.findByIdAndUpdate(
-        id,
-        { $set: userFields },
-        { new: true }, // Return the updated user
-      );
-
-      res.status(200).json({
-        msg: 'User details have been updated!',
-        user: { username: user.username, email: user.email, bio: user.bio, createdAt: user.createdAt },
-      });
-    } catch (error) {
+      res.status(404).json({ message: 'User not found' });
       next(error);
     }
   };

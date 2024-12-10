@@ -5,22 +5,41 @@ import { App } from '@/app';
 import { UserRoute } from '@/routes/users.route';
 import { ProductRoute } from '@/routes/products.route';
 import { WalletRoute } from '@/routes/wallet.route';
+import { PurchaseRoute } from '@/routes/purchase.route';
 
 // Mock data for testing
 const mockUserData = {
-  username: 'testuser',
-  email: 'testuser@example.com',
+  username: `testuser_${Date.now()}`,
+  email: `testuser_${Date.now()}@example.com`,
   password: 'password123',
   bio: 'This is a test user.',
 };
 
-let mockUserId = '';
+const mockUserWithWalletData = {
+  username: `walletuser_${Date.now()}`,
+  email: `walletuser_${Date.now()}@example.com`,
+  password: 'password123',
+  bio: 'This is a test user with wallet.',
+  walletAddress: `0x742d35Cc6634C0532925a3b844Bc454e4438f${Date.now().toString(16).slice(-3)}`,
+};
 
-const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute()]).getServer();
+const app = new App([new UserRoute(), new ProductRoute(), new WalletRoute(), new PurchaseRoute()]).getServer();
 
 // Test suite for User API endpoints
 describe('User API Endpoints', () => {
+  let mockUserId = '';
+  let mockUserWithWalletId = '';
+
   afterAll(async () => {
+    // Clean up the test users
+    if (mockUserId) {
+      await request(app).delete(`/users/${mockUserId}`);
+    }
+    if (mockUserWithWalletId) {
+      await request(app).delete(`/users/${mockUserWithWalletId}`);
+      // Clean up the wallet as well
+      await request(app).delete(`/wallets/${mockUserWithWalletId}`);
+    }
     // Disconnect from the database after all tests are complete
     await mongoose.connection.close();
     console.log('Disconnected from DB after User tests');
@@ -30,8 +49,29 @@ describe('User API Endpoints', () => {
   it('should create a new user', async () => {
     const response = await request(app).post('/users').send(mockUserData);
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('msg', 'User created successfully');
+    expect(response.body).toHaveProperty('message', 'User created successfully');
     expect(response.body.user).toHaveProperty('username', mockUserData.username);
+    mockUserId = response.body.user._id;
+  });
+
+  // Test POST /users - Create a new user with wallet
+  it('should create a new user with wallet', async () => {
+    const response = await request(app).post('/users').send(mockUserWithWalletData);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'User created successfully');
+    expect(response.body.user).toHaveProperty('username', mockUserWithWalletData.username);
+    expect(response.body.user).toHaveProperty('walletAddress', mockUserWithWalletData.walletAddress);
+    mockUserWithWalletId = response.body.user._id;
+
+    // Verify wallet was created
+    const walletResponse = await request(app).get(`/wallets/${mockUserWithWalletId}`);
+    expect(walletResponse.statusCode).toBe(200);
+    expect(walletResponse.body).toHaveProperty('address', mockUserWithWalletData.walletAddress);
+    expect(walletResponse.body).toHaveProperty('user', mockUserWithWalletId);
+    expect(walletResponse.body).toHaveProperty('balance', 0);
+    expect(walletResponse.body).toHaveProperty('nftList');
+    expect(Array.isArray(walletResponse.body.nftList)).toBe(true);
+    expect(walletResponse.body.nftList).toHaveLength(0);
   });
 
   // Test GET /users - Retrieve list of users
@@ -47,29 +87,26 @@ describe('User API Endpoints', () => {
     const userEmail = mockUserData.email;
     const response = await request(app).get(`/users/${userEmail}`);
 
-    // assign id for later use
-    mockUserId = response.body._id;
-
     if (response.statusCode === 200) {
       expect(response.body).toHaveProperty('email', userEmail);
     } else {
       expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'User not found');
+      expect(response.body).toHaveProperty('message', 'User not found');
     }
   });
 
   // Test PATCH /users/:id - Update user information
   it('should modify an existing user', async () => {
-    const newUsername = 'editedtestuser';
+    const newUsername = `editedtestuser_${Date.now()}`;
 
     const response = await request(app).patch(`/users/${mockUserId}`).send({ username: newUsername });
     if (response.statusCode === 200) {
       expect(response.body.user).toHaveProperty('username', newUsername);
     } else if (response.statusCode === 400) {
-      expect(response.body).toHaveProperty('msg', 'Email already in use');
+      expect(response.body).toHaveProperty('message', 'Email already in use');
     } else {
       expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'User not found');
+      expect(response.body).toHaveProperty('message', 'User not found');
     }
   });
 
@@ -77,35 +114,53 @@ describe('User API Endpoints', () => {
   it('should delete a user', async () => {
     const response = await request(app).delete(`/users/${mockUserId}`);
     if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'User successfully removed');
+      expect(response.body).toHaveProperty('message', 'User successfully removed');
     } else {
       expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'User not found');
+      expect(response.body).toHaveProperty('message', 'User not found');
     }
   });
 });
 
 // Mock data for testing
-const mockProductData = {
+let mockProductData = {
   name: 'TestProductName',
   description: 'Description of product created for testing.',
   price: 13.37,
   imageUrl: 'http://example.com/test_product_image.jpg',
-  nftId: 'unique-nft-id-1337',
-  seller: '66e76191c87d92bfc5b68348', // Needs to be the _id of a user already in the database
+  tokenId: '777',
+  contractAddress: '0x37xjkeb50eb47b4081727125e2e074h7785cke3',
+  seller: '', // Will be set in beforeAll
 };
 
 let mockProductId = '';
 
 // Test suite for product API endpoints
 describe('Product API Endpoints', () => {
+  let testUserId = '';
   beforeAll(async () => {
     // Connect to the in-memory database if needed, or use a testing database
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to DB to perform Product tests');
+
+    // Create a user for testing
+    const userResponse = await request(app)
+      .post('/users')
+      .send({
+        username: `productTestUser_${Date.now()}`,
+        email: `producttest_${Date.now()}@example.com`,
+        password: 'password123',
+        walletAddress: `0x37xjkeb50ebf024081727125e2e074hfh95vv9m${Date.now().toString(16).slice(-3)}`,
+      });
+    testUserId = mockProductData.seller = userResponse.body.user._id;
   });
 
   afterAll(async () => {
+    // Clean up test data
+    if (testUserId) {
+      await request(app).delete(`/users/${testUserId}`);
+    }
+
     // Disconnect from the database after all tests are complete
     await mongoose.connection.close();
     console.log('Disconnected from DB after Product tests');
@@ -119,7 +174,7 @@ describe('Product API Endpoints', () => {
     mockProductId = response.body.product._id;
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('msg', 'Product created successfully');
+    expect(response.body).toHaveProperty('message', 'Product created successfully');
     expect(response.body.product).toHaveProperty('name', mockProductData.name);
   });
 
@@ -140,13 +195,13 @@ describe('Product API Endpoints', () => {
       expect(response.body).toHaveProperty('name', mockProductData.name);
     } else {
       expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'Product not found');
+      expect(response.body).toHaveProperty('message', 'Product not found');
     }
   });
 
   // Test PATCH /products/:id - Update product information
   it('should modify an existing product', async () => {
-    const newproductname = 'editedtestproduct';
+    const newproductname = `editedproduct_${Date.now()}`;
 
     const response = await request(app).patch(`/products/${mockProductId}`).send({ name: newproductname });
 
@@ -155,7 +210,7 @@ describe('Product API Endpoints', () => {
       expect(response.body.product).toHaveProperty('_id', mockProductId);
     } else {
       expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'Product not found');
+      expect(response.body).toHaveProperty('message', 'Product not found');
     }
   });
 
@@ -164,10 +219,10 @@ describe('Product API Endpoints', () => {
     const response = await request(app).delete(`/products/${mockProductId}`);
 
     if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'Product successfully removed');
+      expect(response.body).toHaveProperty('message', 'Product successfully removed');
     } else {
       expect(response.statusCode).toBe(404);
-      expect(response.body).toHaveProperty('msg', 'Product not found');
+      expect(response.body).toHaveProperty('message', 'Product not found');
     }
   });
 });
@@ -182,7 +237,13 @@ describe('Wallet API Endpoints', () => {
     console.log('Connected to DB to perform Wallet tests');
 
     // Create a new user for testing
-    const userResponse = await request(app).post('/users').send({ username: 'Test User', email: 'testuser@example.com', password: 'password123' });
+    const userResponse = await request(app)
+      .post('/users')
+      .send({
+        username: `walletTestUser_${Date.now()}`,
+        email: `wallettest_${Date.now()}@example.com`,
+        password: 'password123',
+      });
     testUserId = userResponse.body.user._id;
   });
 
@@ -197,16 +258,16 @@ describe('Wallet API Endpoints', () => {
 
   // Test POST /wallet - Create a new wallet
   it('should create a new wallet', async () => {
-    const response = await request(app).post('/wallet').send({ userId: testUserId });
+    const response = await request(app).post('/wallets').send({ userId: testUserId });
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('msg', 'Wallet created successfully');
+    expect(response.body).toHaveProperty('message', 'Wallet created successfully');
     expect(response.body.wallet).toHaveProperty('user', testUserId);
   });
 
   // Test GET /wallet/:userId - Retrieve wallet information
   it('should retrieve wallet information', async () => {
-    const response = await request(app).get(`/wallet/${testUserId}`);
+    const response = await request(app).get(`/wallets/${testUserId}`);
 
     if (response.statusCode === 200) {
       expect(response.body).toHaveProperty('user', testUserId);
@@ -218,12 +279,12 @@ describe('Wallet API Endpoints', () => {
 
   // Test PATCH /wallet/:userId - Update wallet information
   it('should update wallet information', async () => {
-    const nftList = ['nft1', 'nft2', 'nft3'];
+    const nftList = ['0x123', '0x456', '0x789'];
 
-    const response = await request(app).patch(`/wallet/${testUserId}`).send({ nftList });
+    const response = await request(app).patch(`/wallets/${testUserId}`).send({ nftList });
 
     if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'Wallet details have been updated!');
+      expect(response.body).toHaveProperty('message', 'Wallet details have been updated!');
       expect(response.body.wallet).toHaveProperty('user', testUserId);
       expect(response.body.wallet).toHaveProperty('nftList', nftList);
     } else {
@@ -234,13 +295,152 @@ describe('Wallet API Endpoints', () => {
 
   // Test DELETE /wallet/:userId - Delete wallet
   it('should delete a wallet', async () => {
-    const response = await request(app).delete(`/wallet/${testUserId}`);
-
+    const response = await request(app).delete(`/wallets/${testUserId}`);
     if (response.statusCode === 200) {
-      expect(response.body).toHaveProperty('msg', 'Wallet has been deleted');
+      expect(response.body).toHaveProperty('message', 'Wallet has been deleted');
     } else {
       expect(response.statusCode).toBe(404);
       expect(response.body).toHaveProperty('message', 'No wallet found for this user');
     }
+  });
+});
+
+// Test suite for Purchase API endpoints
+describe('Purchase API Endpoints', () => {
+  let testUser: any;
+  let testProduct: any;
+  let testPurchaseId: string;
+
+  beforeAll(async () => {
+    console.log('Connected to DB to perform Purchase tests');
+    await mongoose.connect(process.env.MONGO_URI);
+
+    // Create a test user with wallet
+    const userResponse = await request(app)
+      .post('/users')
+      .send({
+        username: `purchaseTestUser_${Date.now()}`,
+        email: `purchasetest_${Date.now()}@example.com`,
+        password: 'testpass123',
+        bio: 'Test user for purchase tests',
+        walletAddress: `0x1234567890abcdef${Date.now().toString(16).slice(-3)}`, // Add wallet address directly
+      });
+    testUser = userResponse.body.user;
+
+    // Create a test product
+    const productResponse = await request(app).post('/products').send({
+      name: 'Test NFT for Purchase',
+      description: 'Test NFT created for purchase testing',
+      price: 1.5,
+      imageUrl: 'http://example.com/test_nft.jpg',
+      tokenId: '12345',
+      contractAddress: '0x1234567890abcdef',
+      seller: testUser._id,
+    });
+    testProduct = productResponse.body.product;
+  });
+
+  afterAll(async () => {
+    // Clean up: Delete test user, product, and related data
+    if (testUser && testUser._id) {
+      await request(app).delete(`/users/${testUser._id}`);
+    }
+    if (testProduct && testProduct._id) {
+      await request(app).delete(`/products/${testProduct._id}`);
+    }
+    await mongoose.disconnect();
+    console.log('Disconnected from DB after Purchase tests');
+  });
+
+  // Test POST /purchases/create - Create a new purchase
+  it('should create a new purchase', async () => {
+    const response = await request(app).post('/purchases/create').send({
+      productId: testProduct._id,
+      userId: testUser._id,
+      amount: testProduct.price,
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty('data');
+    testPurchaseId = response.body.data._id;
+  });
+
+  // Test GET /purchases/:id/status - Get purchase status
+  it('should get purchase status', async () => {
+    const response = await request(app).get(`/purchases/${testPurchaseId}/status`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('data');
+  });
+
+  // Test POST /purchases/create - Invalid product
+  it('should fail to create purchase with invalid product', async () => {
+    const response = await request(app).post('/purchases/create').send({
+      productId: new mongoose.Types.ObjectId(),
+      userId: testUser._id,
+      amount: 1.5,
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toHaveProperty('message', 'Product not found');
+  });
+
+  // Test POST /purchases/create - User without wallet
+  it('should fail to create purchase when user has no wallet', async () => {
+    // Create a user without a wallet
+    const noWalletUser = await request(app)
+      .post('/users')
+      .send({
+        username: `nowalletuser_${Date.now()}`,
+        email: `nowalletuser_${Date.now()}@example.com`,
+        password: 'testpass123',
+        bio: 'Test user without wallet',
+      });
+
+    const response = await request(app).post('/purchases/create').send({
+      productId: testProduct._id,
+      userId: noWalletUser.body.user._id,
+      amount: testProduct.price,
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty('message', 'Buyer must have a wallet address to purchase NFTs');
+
+    // Clean up
+    await request(app).delete(`/users/${noWalletUser.body.user._id}`);
+  });
+
+  // Test POST /purchases/:id/process - Process a purchase
+  it('should process a purchase', async () => {
+    // First create a purchase
+    const createResponse = await request(app).post('/purchases/create').send({
+      productId: testProduct._id,
+      userId: testUser._id,
+      amount: testProduct.price,
+    });
+
+    const purchaseId = createResponse.body.data._id;
+    const response = await request(app).post(`/purchases/${purchaseId}/process`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Purchase processed successfully');
+    expect(response.body).toHaveProperty('data');
+  });
+
+  // Test GET /purchases/history - Get purchase history for user
+  it('should get purchase history for user', async () => {
+    const response = await request(app).get(`/purchases/history?userId=${testUser._id}`);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(Array.isArray(response.body.data)).toBe(true);
+  });
+
+  // Test GET /purchases/history - Invalid user
+  it('should fail to get purchase history for invalid user', async () => {
+    const response = await request(app).get(`/purchases/history?userId=507f1f77bcf86cd799439011`);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toHaveProperty('message', 'User not found');
   });
 });

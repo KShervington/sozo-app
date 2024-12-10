@@ -22,7 +22,11 @@ export class ProductDto {
 
   @IsString()
   @IsNotEmpty()
-  public nftId: string;
+  public tokenId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public contractAddress: string;
 
   @IsString()
   @IsNotEmpty()

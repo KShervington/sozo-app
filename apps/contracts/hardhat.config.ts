@@ -1,20 +1,17 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
-
 import '@nomiclabs/hardhat-truffle5';
 import '@vechain/sdk-hardhat-plugin';
 import { VECHAIN_URL_SOLO } from '@vechain/hardhat-vechain';
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
 
-require('dotenv').config();
+// Load environment variables from the contracts .env file
+dotenv.config({ path: resolve(__dirname, '.env') });
 
 const config: HardhatUserConfig = {
-    solidity: '0.8.20',
-};
-
-module.exports = {
     solidity: {
         version: '0.8.20',
-        evmVersion: 'paris',
         settings: {
             optimizer: {
                 enabled: true,
@@ -22,46 +19,29 @@ module.exports = {
             },
         },
     },
-    mocha: {
-        timeout: 180000,
-    },
     networks: {
-        hardhat: {
-            chainId: 1337,
-        },
         vechain_solo: {
             url: VECHAIN_URL_SOLO,
             accounts: {
-                mnemonic: 'denial kitchen pet squirrel other broom bar gas better priority spoil cross',
+                mnemonic: process.env.MNEMONIC,
                 count: 10,
                 path: "m/44'/818'/0'/0",
             },
-            restful: true,
             gas: 10000000,
-            count: 10,
+            timeout: 180000,
         },
-        vechain_testnet: {
-            url: process.env.TESTNET_URL ?? '',
+        vechain: {
+            url: process.env.BLOCKCHAIN_RPC_URL,
             accounts: {
-                mnemonic: process.env.MNEMONIC ?? '',
-                count: 10,
-                path: "m/44'/818'/0'/0",
-            },
-            restful: true,
-            gas: 10000000,
-            count: 10,
-        },
-        vechain_mainnet: {
-            url: process.env.MAINNET_URL ?? '',
-            accounts: {
-                mnemonic: process.env.MNEMONIC ?? '',
+                mnemonic: process.env.MNEMONIC,
                 count: 1,
                 path: "m/44'/818'/0'/0",
             },
-            restful: true,
             gas: 10000000,
-        },
-    },
+            timeout: 180000,
+            network_id: "0x27"  // Chain tag for testnet
+        }
+    }
 };
 
 export default config;

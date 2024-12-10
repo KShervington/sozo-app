@@ -4,38 +4,50 @@ import { User } from '@/models/User';
 import url from 'url';
 import { ParsedUrlQuery } from 'querystring';
 import { ProductPatch } from '@/interfaces/product.interface';
+import { HttpException } from '@/exceptions/HttpException';
 
 export class ProductController {
   // @route   POST /products
   // @desc    Create a new product
   public createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { name, description, price, category, imageUrl, nftId } = req.body;
-
-    const sellerId = req.body.seller;
-
-    const seller = await User.findById(sellerId);
-    if (!seller) {
-      res.json({ msg: 'Seller not found' });
-      return;
-    }
-
     try {
+      const { name, description, price, imageUrl, tokenId, contractAddress } = req.body;
+      const sellerId = req.body.seller;
+
+      // Validate seller
+      const seller = await User.findById(sellerId);
+      if (!seller) {
+        throw new HttpException(404, 'Seller not found');
+      }
+
+      // Validate seller has a wallet address
+      if (!seller.walletAddress) {
+        throw new HttpException(400, 'Seller must have a wallet address to create NFT products');
+      }
+
+      // Validate tokenId uniqueness
+      const existingProduct = await Product.findOne({ tokenId });
+      if (existingProduct) {
+        throw new HttpException(409, 'Product with this token ID already exists');
+      }
+
       // Create new product
       const product = new Product({
         name,
         description,
         price,
-        category,
         imageUrl,
-        nftId,
-        seller: sellerId, // Link the product to the seller
+        tokenId,
+        contractAddress,
+        seller: sellerId,
+        status: 'available'
       });
 
       await product.save();
 
-      res.json({
-        msg: `Product created successfully`,
-        product: product,
+      res.status(200).json({
+        message: 'Product created successfully',
+        product,
       });
     } catch (error) {
       next(error);
@@ -46,8 +58,8 @@ export class ProductController {
   // @desc    Retrieve information on multiple products
   public getProductList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // Get query params
       const queryObj: ParsedUrlQuery = url.parse(req.url, true).query;
+      const { status } = queryObj;
 
       // Get the 'limit' query param if it exists
       const limitParam: string | undefined = Array.isArray(queryObj.limit) ? queryObj.limit[0] : queryObj.limit;
@@ -55,18 +67,20 @@ export class ProductController {
       // If the limit value is undefined, default to 10
       let productLimit: number = parseInt(limitParam || '20');
 
-      // Perform range validations on number of users to return
-      if (productLimit < 1) {
-        productLimit = 20; // Default limit
-      } else if (productLimit > 100) {
-        productLimit = 100; // Maximum limit
-      }
+      // Create a query based on status if the status parameter is provided
+      const query = status 
+        ? { 'status': { $exists: true, $eq: status } }
+        : {};
 
-      // Fetch a list of users, but only return public information
-      const products = await Product.find({}, 'name price description seller').limit(productLimit);
+      const products = await Product.find(query).limit(productLimit)
+        .populate({
+          path: 'seller',
+          select: 'username walletAddress'
+        });
 
-      // If the user is found, return the user data (excluding password for security reasons)
-      res.json(products);
+      res.status(200).json(
+        products
+      );
     } catch (error) {
       next(error);
     }
@@ -78,15 +92,18 @@ export class ProductController {
     try {
       const productId = req.params.id;
 
-      let product = await Product.findById(productId);
+      const product = await Product.findById(productId).populate({
+        path: 'seller',
+        select: 'username walletAddress'
+      });
 
-      // If the user does not exist, return a 404 error
       if (!product) {
-        res.status(404).json({ msg: 'Product not found' });
+        throw new HttpException(404, 'Product not found');
       }
 
-      // Return product data
-      res.json(product);
+      res.status(200).json(
+        product
+      );
     } catch (error) {
       next(error);
     }
@@ -100,52 +117,40 @@ export class ProductController {
 
       await Product.findByIdAndDelete(id);
 
-      res.status(200).json({ msg: 'Product successfully removed' });
+      res.status(200).json({ message: 'Product successfully removed' });
     } catch (error) {
-      res.status(404).json({ msg: 'Product not found' });
+      res.status(404).json({ message: 'Product not found' });
       next(error);
     }
   };
 
   // @route   PATCH /products/:id
-  // @desc    Update product information
+  // @desc    Update a product
   public updateProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const id: string = req.params.id;
+      const productId = req.params.id;
+      const updates: ProductPatch = req.body;
 
-      // Extract the fields to update from the request body
-      const { name, price, description, imageUrl } = req.body;
-      const productFields: ProductPatch = {};
+      // Don't allow updating tokenId or contractAddress after creation
+      // delete updates.tokenId;
+      // delete updates.contractAddress;
 
-      // Extract the fields to update from the request body
-      if (name) productFields.name = name;
-      if (price) productFields.price = price;
-      if (description) productFields.description = description;
-      if (imageUrl) productFields.imageUrl = imageUrl;
+      const product = await Product.findByIdAndUpdate(
+        productId,
+        { $set: updates },
+        { new: true }
+      ).populate({
+        path: 'seller',
+        select: 'username walletAddress'
+      });
 
-      let product = await Product.findById(id);
-
-      // If the product does not exist, return a 404 error
       if (!product) {
-        res.status(404).json({ msg: 'Product not found' });
+        throw new HttpException(404, 'Product not found');
       }
 
-      product = await Product.findByIdAndUpdate(
-        id,
-        { $set: productFields },
-        { new: true }, // Return the updated product
-      );
-
       res.status(200).json({
-        msg: 'Product details have been updated!',
-        product: {
-          _id: product._id,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          imageUrl: product.imageUrl,
-          createdAt: product.createdAt,
-        },
+        message: 'Product updated successfully',
+        product
       });
     } catch (error) {
       next(error);
