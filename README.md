@@ -1,206 +1,167 @@
-# X-App Template for VeBetterDAO 🚀
+# Sozo inFashion - Sustainable Fashion Platform
 
-                                     #######
-                                ################
-                              ####################
-                            ###########   #########
-                           #########      #########
-         #######          #########       #########
-         #########       #########      ##########
-          ##########     ########     ####################
-           ##########   #########  #########################
-             ################### ############################
-              #################  ##########          ########
-                ##############      ###              ########
-                 ############                       #########
-                   ##########                     ##########
-                    ########                    ###########
-                      ###                    ############
-                                         ##############
-                                   #################
-                                  ##############
-                                  #########
+<div align="center">
+  <img src="https://via.placeholder.com/150" alt="Sozo Logo" width="150"/>
+  <p>Rewarding sustainable fashion choices with blockchain technology</p>
+</div>
 
-Unlock the potential of decentralized application development on Vechain with our X-App template for VeBetterDAO. Designed for the Vechain Thor blockchain, this template integrates cutting-edge technologies such as React, TypeScript, Hardhat, and Express, ensuring a seamless and efficient DApp development experience. 🌟
+## Project Overview
 
-Read more about the implementation and key features of this template in our [Developer Docs](https://docs.vebetterdao.org/developer-guides/integration-examples/pattern-2-use-smart-contracts-and-backend).
+Sozo inFashion is a platform that combines sustainable fashion with blockchain technology to incentivize eco-friendly shopping choices. The platform allows users to submit receipts of sustainable fashion purchases and receive NFT rewards, which can be converted to VeBetterDAO ecosystem tokens.
 
-This template uses the VeBetterDAO ecosystem to distribute rewards to users. To learn more about VeBetterDAO, visit our [documentation](https://docs.vebetterdao.org/developer-guides/integration-examples).
+### Key Features
 
-When using the solo node you can import the following mnemonic into your wallet and have access to 10 pre-funded accounts:
-
-```
-denial kitchen pet squirrel other broom bar gas better priority spoil cross
-```
-
-## Requirements
-
-Ensure your development environment is set up with the following:
-
-- **Node.js (v18 or later):** [Download here](https://nodejs.org/en/download/package-manager) 📥
-- **Yarn:** [Install here](https://classic.yarnpkg.com/lang/en/docs/install/#mac-stable) 🧶
-- **Docker (for containerization):** [Get Docker](https://docs.docker.com/get-docker/) 🐳
-- **Hardhat (for smart contracts):** [Getting Started with Hardhat](https://hardhat.org/hardhat-runner/docs/getting-started) ⛑️
+- **Receipt Submission System**: Users can upload receipts from sustainable fashion purchases
+- **AI-powered Receipt Verification**: Uses OpenAI GPT-Vision API to analyze and verify receipt authenticity
+- **Blockchain Rewards**: ERC721 NFTs minted as proof of sustainable purchases
+- **VeBetterDAO Integration**: Connects with the VeBetterDAO ecosystem for token rewards
+- **RESTful API**: Comprehensive backend for managing users, products, and purchase data
 
 ## Project Structure
 
-### Frontend (apps/frontend) 🌐
+The project is organized using a monorepo approach with three main components:
 
-A blazing-fast React application powered by Vite:
+### Frontend (`/apps/frontend`)
 
-- **Vechain dapp-kit:** Streamline wallet connections and interactions. [Learn more](https://docs.vechain.org/developer-resources/sdks-and-providers/dapp-kit)
+A modern React application built with:
 
-### Backend (apps/backend) 🔙
+- React 18+
+- TypeScript
+- Vite
+- Chakra UI
+- Axios for API communication
 
-An Express server crafted with TypeScript for robust API development:
+### Backend (`/apps/backend`)
 
-- **Vechain SDK:** Seamlessly fetch and perform transactions with the VechainThor blockchain. [Learn more](https://docs.vechain.org/developer-resources/sdks-and-providers/sdk)
-- **OpenAI GPT-Vision-Preview:** Integrate image analysis capabilities. [Explore here](https://platform.openai.com/docs/guides/vision)
+An Express-based API server with:
 
-### Contracts (apps/contracts) 📜
+- TypeScript
+- MongoDB for data storage
+- OpenAI GPT-Vision API integration
+- RESTful API endpoints for users, products, and purchases
+- Blockchain wallet integration
 
-Smart contracts in Solidity, managed with Hardhat for deployment on the Vechain Thor network.
+### Smart Contracts (`/apps/contracts`)
 
-### Packages 📦
+Solidity contracts for the blockchain components:
 
-Shared configurations and utility functions to unify and simplify your development process.
+- SozoNFT: An ERC721 contract for issuing NFTs to users
+- EcoEarn: A contract managing reward cycles and distribution through VeBetterDAO
 
-## Environment Variables ⚙️
+## Getting Started
 
-Configure your environment variables for seamless integration:
+### Prerequisites
 
-### Frontend
+- Node.js (v18 or later)
+- Yarn package manager
+- MongoDB
+- Docker (optional, for containerization)
 
-Place your `.env` files in `apps/frontend`:
+### Installation
 
-- **VITE_RECAPTCHA_V3_SITE_KEY:** [Request your RecaptchaV3 site keys](https://developers.google.com/recaptcha/docs/v3)
-
-### Backend
-
-Store your environment-specific `.env` files in `apps/backend`. `.env.development.local` & `.env.production.local` allow for custom environment variables based on the environment:
-
-- **OPENAI_API_KEY:** [Get your GPT-4 OpenAI key](https://platform.openai.com/api-keys) (Enable GPT-4 [here](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4-gpt-4-turbo-and-gpt-4o))
-- **RECAPTCHA_SECRET_KEY:** [Request your RecaptchaV3 site keys](https://developers.google.com/recaptcha/docs/v3)
-
-### Contracts
-
-Manage deployment parameters and network configurations in `hardhat.config.js` under `apps/contracts`:
-
-- **MNEMONIC:** Mnemonic of the deploying wallet
-
-## Getting Started 🏁
-
-Clone the repository and install dependencies with ease:
+1. Clone the repository:
 
 ```bash
-yarn install # Run this at the root level of the project
+git clone https://github.com/your-org/sozo-app.git
+cd sozo-app
 ```
 
-To distribute rewards this contract necesitates of a valid APP_ID provided by VeBetterDAO when joining the ecosystem.
-In testnet you can generate the APP_ID by using the [VeBetterDAO sandbox](https://dev.testnet.governance.vebetterdao.org/).
-This contract can be initially deployed without this information and DEFAULT_ADMIN_ROLE can update it later through {EcoEarn-setAppId}.
-
-This contract must me set as a `rewardDistributor` inside the X2EarnApps contract to be able to send rewards to users and withdraw.
-
-## Deploying Contracts 🚀
-
-Deploy your contracts effortlessly on either the Testnet or Solo networks.
-If you are deploying on the Testnet, ensure you have the correct addresses in the `config-contracts` package (generated on the [VeBetterDAO sandbox](https://dev.testnet.governance.vebetterdao.org/)).
-When deploying on the SOLO network the script will deploy for you the mocked VeBetterDAO contracts and generate an APP_ID.
-
-### Deploying on Solo Network
+2. Install dependencies:
 
 ```bash
-yarn contracts:deploy:solo
+yarn install
 ```
 
-### Deploying on Testnet
+3. Set up environment variables:
 
-```bash
-yarn contracts:deploy:testnet
-```
+   - Create `.env` files in both `/apps/frontend` and `/apps/backend` directories
+   - Required variables for backend:
+     - `MONGO_URI`: MongoDB connection string
+     - `OPENAI_API_KEY`: API key for OpenAI
+     - `RECAPTCHA_SECRET_KEY`: For reCAPTCHA verification
 
-## Running on Solo Network 🔧
-
-Run the Frontend and Backend, connected to the Solo network and pointing to your deployed contracts. Ensure all environment variables are properly configured:
+4. Start the development servers:
 
 ```bash
 yarn dev
 ```
 
-### Setting up rewards
+## API Reference
 
-## Testnet
+The backend provides a RESTful API with the following main endpoints:
 
-Read the [VeBetterDAO documentation](https://docs.vebetterdao.org/developer-guides/test-environmnet) to learn how to set up rewards for your users and use the Testnet environment.
+### Users
 
-Test environment: [https://dev.testnet.governance.vebetterdao.org/](https://dev.testnet.governance.vebetterdao.org/)
+- `GET /users`: List all users
+- `GET /users/:email`: Get user by email
+- `POST /users`: Create new user
+- `PATCH /users/:id`: Update user
+- `DELETE /users/:id`: Delete user
 
-[TEST ENVIRONMENT DEMO](https://streamable.com/e/175r1s?quality=highest)
+### Products
 
-Thanks to the test environment you will be able to mint and deposit B3TR tokens int the rewards pool that you will use to distribute rewards to users.
+- `GET /products`: List all products
+- `GET /products/:id`: Get product by ID
+- `POST /products`: Create new product
+- `PATCH /products/:id`: Update product
+- `DELETE /products/:id`: Delete product
 
-Now you just need to trigger cycles and set amount of rewards per cycle on your EcoEarn contract.
+### Purchases
 
-1. Go to our online [inspector app](https://solid-funicular-1wmop55.pages.github.io/#/contracts) that you can use to interact with your contracts. Be sure to select the correct network (Testnet).
+- `POST /purchases/create`: Create new purchase submission
+- `POST /purchases/:purchaseId/process`: Process a purchase
+- `GET /purchases/:purchaseId/status`: Get purchase status
+- `GET /purchases/history`: Get purchase history
 
-2. Add the `EcoEarn` contract to the inspector app. Get the address from `config-contracts` package and the ABI from the `apps/contracts/artifacts/contracts/EcoEarn.sol/EcoEarn.json` file.
-   ![image](https://i.ibb.co/TK8519c/SCR-20240723-kjid.png)
+### Wallets
 
-3. Set how many rewards you want to distribute per cycle:
-   ![image](https://i.ibb.co/qpJnL5x/SCR-20240723-kkti.png)
+- `GET /wallets/:userId`: Get user's wallet
+- `POST /wallets`: Create wallet
+- `PATCH /wallets/:userId`: Update wallet
+- `DELETE /wallets/:userId`: Delete wallet
 
-4. Trigger a cycle:
-   ![image](https://i.ibb.co/47V2Zjb/SCR-20240723-kkxx.png)
+## Smart Contracts
 
-## Solo Network
+### SozoNFT
 
-Since the Solo network is a local network with mocked VeBetterDAO contracts you can use the following steps to set up available rewards to distribute to users:
+An ERC721 contract for issuing NFTs to users who verify sustainable purchases. Features include:
 
-0. Ensure you are using a wallet with imported pre-funded accounts mnemonic into your wallet. Mnemoninc:
+- Minting NFTs for verified sustainable purchases
+- Linking NFTs to product IDs
+- Ownership transfer capabilities
 
-```
-denial kitchen pet squirrel other broom bar gas better priority spoil cross
-```
+### EcoEarn
 
-1. Copy the `APP_ID` generated by the `contracts:deploy:solo` script and logged in the console.
-2. Run `devpal`, a frontend tool to interact with your contracts:
+A contract that manages reward cycles and distribution through the VeBetterDAO ecosystem:
+
+- Reward cycle management
+- Submission verification
+- Token distribution to participants
+- Integration with VeBetterDAO's X2EarnRewardsPool
+
+## Creating New Routes
+
+To add new functionality to the backend:
+
+1. Create a controller file in `apps/backend/src/controllers/`
+2. Create a route file in `apps/backend/src/routes/`
+3. Add the new route to the route list in `apps/backend/src/server.ts`
+
+## Development
+
+### Testing Data
+
+To populate the database with test products:
 
 ```bash
-npx @vechain/devpal http://localhost:8669
+node apps/backend/src/tests/utils/populate_products.ts
 ```
 
-3. Open the `Inspector` tab and perform the following actions:
-4. Add the B3TR_Mock contract (get the address from the console logs and ABI from the `apps/contracts/artifacts/contracts/mock/B3TR_Mock.sol/B3TR_Mock.json` file)
-   ![image](https://i.ibb.co/6Zrj7Nx/SCR-20240723-jorq.png)
-5. Add the X2EarnRewardsPool contract (get the address from the console logs and ABI from the `apps/contracts/artifacts/contracts/mock/X2EarnRewardsPoolMock.sol/X2EarnRewardsPoolMock.json` file)
-   ![image](https://i.ibb.co/yYjLw9v/SCR-20240723-jozk.png)
-6. You should now have the following setup:
-   ![image](https://i.ibb.co/w4XWyh9/SCR-20240723-jpbc.png)
-7. To recharge the rewards pool you will need to mint some mocked B3TR tokens, then deposit them into the rewards pool. Perform the following actions:
-   - Mint some tokens by calling the `mint` function on the B3TR_Mock contract
-     ![image](https://i.ibb.co/XCQ7LNR/SCR-20240723-kgll.png)
-   - Approve the X2EarnRewards contract to spend the tokens by calling the `approve` function on the B3TR_Mock contract
-     ![image](https://i.ibb.co/X7Txx7Y/SCR-20240723-keuu.png)
-   - Deposit the tokens into the rewards pool by calling the `deposit` function on the X2EarnRewardsPool contract
-     ![image](https://i.ibb.co/X7Txx7Y/SCR-20240723-keuu.png)
-8. Now you just need to set how many rewards you want to distribute per cycle and trigger the start of the cycle
+## License
 
-- Add the `EcoEarn` contract to the inspector app. Get the address from `config-contracts` package and the ABI from the `apps/contracts/artifacts/contracts/EcoEarn.sol/EcoEarn.json` file.
-  ![image](https://i.ibb.co/TK8519c/SCR-20240723-kjid.png)
+This project is licensed under the MIT License.
 
-- Set how many rewards you want to distribute per cycle:
-  ![image](https://i.ibb.co/qpJnL5x/SCR-20240723-kkti.png)
+## Contributors
 
-- Trigger a cycle:
-  ![image](https://i.ibb.co/47V2Zjb/SCR-20240723-kkxx.png)
-
-NB: Values are in wei, use this tool to convert to VET: [https://eth-converter.com/](https://eth-converter.com/)
-
-## Disclaimer ⚠️
-
-This template serves as a foundational starting point and should be thoroughly reviewed and customized to suit your project’s specific requirements. Pay special attention to configurations, security settings, and environment variables to ensure a secure and efficient deployment.
-
----
-
-Embrace the power of VeBetterDAO's X-Apps template and transform your DApp development experience. Happy coding! 😄
+- [Kyle Shervington](https://github.com/KShervington)
+- [Zi Zheng](https://github.com/Zibilicious)
