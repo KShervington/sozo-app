@@ -1,10 +1,5 @@
 # Sozo inFashion - Sustainable Fashion Platform
 
-<div align="center">
-  <img src="https://via.placeholder.com/150" alt="Sozo Logo" width="150"/>
-  <p>Rewarding sustainable fashion choices with blockchain technology</p>
-</div>
-
 ## Project Overview
 
 Sozo inFashion is a platform that combines sustainable fashion with blockchain technology to incentivize eco-friendly shopping choices. The platform allows users to submit receipts of sustainable fashion purchases and receive NFT rewards, which can be converted to VeBetterDAO ecosystem tokens.
